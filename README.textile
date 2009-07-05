@@ -1,0 +1,21 @@
+
+
+
+RequestStream
+
+* RequestStreamFile -- reads requests from TSV file
+
+
+Scraper
+
+* HttpScraper --
+** JSON
+** HTML
+*** \0 separates records, \t separates initial fields; 
+*** map \ to \\, then tab, cr and newline to \t, \r and \n resp.
+*** map tab, cr and newline to &#x9; &#xD; and &#xA; resp.
+
+
+x9 xa xd x7f
+
+* HeadScraper -- records the HEAD parameters

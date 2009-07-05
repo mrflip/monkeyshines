@@ -1,18 +1,18 @@
-module TwitterFriends::Scrape
-  class ScrapeRequestGroup
-    attr_accessor :http_scraper, :thing
-    def initialize thing
-      self.http_scraper = HTTPScraper.new('twitter.com')
-      self.thing = thing
-    end
-  end
+module Monkeyshines
+  # class ScrapeRequestGroup
+  #   attr_accessor :http_scraper, :thing
+  #   def initialize thing
+  #     self.http_scraper = HTTPScraper.new('twitter.com')
+  #     self.thing = thing
+  #   end
+  # end
 
   class ScrapeRequest < Struct.new(
       :context, :priority, :identifier, :page, :moreinfo,
       :url,
       :scraped_at, :response_code, :response_message,
       :contents )
-    include TwitterFriends::StructModel::ModelCommon
+    # include TwitterFriends::StructModel::ModelCommon
 
     def dump_form
       line = to_a.join("\t")
