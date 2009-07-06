@@ -6,18 +6,16 @@ module Monkeyshines
   # Don't know what my error-handling responsibilities are, here.
   #
   class HttpScraper
-    attr_accessor :host, :connection_opened_at, :username, :password
+    # Default user agent presented to servers
+    USER_AGENT = "Monkeyshines v0.1"
+    attr_accessor :host, :connection_opened_at, :username, :password, :http_get_options
 
     def initialize host, options={}
       self.host = host
       self.username = options[:username]
       self.password = options[:password]
-    end
-
-    # authenticate request
-    def authenticate req
-      return unless username && password
-      req.basic_auth username, password
+      self.http_get_options = {}
+      self.http_get_options["User-Agent"] = options[:user_agent] || USER_AGENT
     end
 
     # Current session (starting a new one if necessary)
@@ -34,10 +32,16 @@ module Monkeyshines
       @http = nil
     end
 
+    # Build and dispatch request
     def perform_request url
-      req        = Net::HTTP::Get.new(url.to_s)
+      req = Net::HTTP::Get.new(url.to_s, http_get_options)
       authenticate req
       http.request req
+    end
+
+    # authenticate request
+    def authenticate req
+      req.basic_auth(username, password) if username && password
     end
 
     # Make request, return satisfied scrape_request
