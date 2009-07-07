@@ -8,6 +8,37 @@ RequestStream
 
 Scraper
 
+---------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------
+
+h2. Request stream
+
+h3. Strategy
+
+* Base: simple fetch and store of URI 
+* Feed: poll the resource and extract contents, store by GUID
+* Paginated: one resource, but requires one or more requests to 
+** Paginated + limit (max_id/since_date): rather than request by increasing page, request one page with a limit parameter until the last-on-page overlaps the previous scrape.  For example, say you are scraping search results, and that when you last made the request the max ID was 120_000; the current max_id is 155_000. Request the first page (no limit). Using the last result on each page as the new limit_id until that last result is less than 120_000.
+** Paginated + stop_on_duplicate: request pages until the last one on the page matches an already-requested instance.
+** Paginated + velocity_estimate: . For example, say a user acquires on average 4.1 followers/day and it has been 80 days since last scrape. With 100 followers/req you will want to request ceil( 4.1 * 80 / 100 ) = 4 pages.
+
+h3. Periodic requests
+
+Request stream can be metered using read-through, scheduled (eg cron), or test-and-sleep.
+
+* Read-through cache
+* Scheduled
+* Test and sleep. A queue of resources is cyclically polled, sleeping whenever bored.
+
+h3. S
+
+
+---------------------------------------------------------------------------
+
+h2. Scraper
+
 * HttpScraper --
 ** JSON
 ** HTML
@@ -19,3 +50,12 @@ Scraper
 x9 xa xd x7f
 
 * HeadScraper -- records the HEAD parameters
+
+---------------------------------------------------------------------------
+
+h2. Store 
+
+
+* Flat file (chunked)
+* Key store
+* Read-through cache
