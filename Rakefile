@@ -4,11 +4,12 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "monkeyshines"
-    gem.summary = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML.}
-    gem.email = "flip@infochimps.org"
-    gem.homepage = "http://github.com/mrflip/monkeyshines"
-    gem.authors = ["Philip (flip) Kromer"]
+    gem.name         = "monkeyshines"
+    gem.summary      = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML.}
+    gem.description  = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML. Plays nicely with wuclan and wukong.}
+    gem.email        = "flip@infochimps.org"
+    gem.homepage     = "http://github.com/mrflip/monkeyshines"
+    gem.authors      = ["Philip (flip) Kromer"]
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
 
