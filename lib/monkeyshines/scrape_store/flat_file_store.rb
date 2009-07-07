@@ -1,18 +1,18 @@
-module TwitterFriends
-  module Scrape
-    class ScrapeDumper
+require 'fileutils'; include FileUtils
+
+module Monkeyshines
+  module ScrapeStore
+    #
+    class FlatFileStore
       CHECKPOINT_INTERVAL = 15*60 unless defined?(TwitterFriends::Scrape::ScrapeDumper::CHECKPOINT_INTERVAL)
-      attr_accessor :dump_file, :ripd_dir
+      attr_accessor :filename_root, :dump_file
       attr_accessor :timestamp
-      attr_accessor :handle
 
       #
-      # +handle+  : first part of name for files
-      # +ripd_dir+: root directory for scraped files
+      # +filename_root+  : first part of name for files
       #
-      def initialize ripd_dir, handle
-        self.ripd_dir = ripd_dir
-        self.handle   = handle
+      def initialize filename_root
+        self.filename_root = filename_root
       end
 
       #
@@ -23,17 +23,22 @@ module TwitterFriends
         mkdir!
         self.dump_file = File.open(dump_filename, "a")
       end
-      # Close the dump file
-      def close!
-        dump_file.close if dump_file
-      end
       # Ensure the dump_file's directory exists
       def mkdir!
         FileUtils.mkdir_p File.dirname(dump_filename)
       end
+      # Close the dump file
+      def close!
+        dump_file.close if dump_file
+      end
       # write to the dump_file
       def <<(s)
         dump_file << s
+      end
+      #
+      def set request
+        checkpoint!
+        self << request.to_flat
       end
 
       #
@@ -78,7 +83,7 @@ module TwitterFriends
       def date_slug
         timestamp.strftime("_%Y%m%d/_%H")
       end
-    end
 
+    end
   end
 end
