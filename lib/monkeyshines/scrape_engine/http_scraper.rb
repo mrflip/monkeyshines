@@ -8,36 +8,40 @@ module Monkeyshines
     class HttpScraper
       # Default user agent presented to servers
       USER_AGENT = "Monkeyshines v0.1"
-      attr_accessor :host, :connection_opened_at, :username, :password, :http_get_options
+      attr_accessor :connection_opened_at, :username, :password, :http_req_options
 
-      def initialize host, options={}
-        self.host = host
+      def initialize options={}
         self.username = options[:username]
         self.password = options[:password]
-        self.http_get_options = {}
-        self.http_get_options["User-Agent"] = options[:user_agent] || USER_AGENT
+        self.http_req_options = {}
+        self.http_req_options["User-Agent"] = options[:user_agent] || USER_AGENT
       end
 
       # Current session (starting a new one if necessary)
-      def http
-        # Don't know what my error-handling responsibilities are, here.
-        return @http if (@http && @http.started?)
-        self.connection_opened_at = Time.now
-        warn "Opening HTTP connection for #{host} at #{connection_opened_at}"
-        @http = Net::HTTP.start(host)
+      def http host, port=nil
+        return @http if (@http && (@http.started?) && (@host == host))
+        finish       if (@http && (@http.started?) && (@host != host))
+        @host = host
+        @connection_opened_at = Time.now
+        Monkeyshines.logger.info "Opening HTTP connection for #{@host} at #{@connection_opened_at}"
+        @http = Net::HTTP.new(@host)
+        @http.set_debug_output $stderr
+        @http.start
       end
 
       # Close the current session, if any
       def finish
+        Monkeyshines.logger.info "Closing HTTP connection for #{@host} from #{@connection_opened_at}"
         @http.finish if @http
         @http = nil
       end
 
       # Build and dispatch request
-      def perform_request url
-        req = Net::HTTP::Get.new(url.to_s, http_get_options)
+      def perform_request url_str
+        url = URI.parse(url_str)
+        req = Net::HTTP::Get.new(url.send(:path_query), http_req_options)
         authenticate req
-        http.request req
+        http(url.host, url.port).request req
       end
 
       # authenticate request
@@ -50,8 +54,7 @@ module Monkeyshines
         begin
           response = perform_request scrape_request.url
           scrape_request.response_code     = response.code
-          scrape_request.response_message  = response.message.gsub(/[\t\r\n]+/, " ")[0..60]
-          scrape_request.contents          = response.body
+          scrape_request.response          = response
         rescue Exception => e
           warn e
         end

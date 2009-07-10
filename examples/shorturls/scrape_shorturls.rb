@@ -1,44 +1,39 @@
 #!/usr/bin/env ruby
 require 'rubygems'
-$: << File.dirname(__FILE__)+'/lib'
+$: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
 require 'wukong'
 require 'monkeyshines'
+require 'monkeyshines/scrape_store/read_thru_store'
 require 'monkeyshines/scrape_engine/http_head_scraper'
+require 'shorturl_request'
+require 'trollop' # gem install trollop
 
-request_filename = ARGV[0]
-if ! request_filename
-  warn "Please give the name of a file holding URLs to scrape"; exit
-end
-dump_filename = "/tmp/req_dump.tsv"
-
-class SimpleScrapeRequest < Struct.new(
-    :url,
-    :scraped_at, :response_code, :response_message,
-    :contents )
+opts = Trollop::options do
+  opt :from,      "Flat file of scrapes", :type => String
+  opt :store_db,  "Tokyo cabinet db name", :type => String
 end
 
-class String
-  def to_flat
-    self
-  end
-end
+# Request stream
+Trollop::die :from, "gives the scrapes to load" if opts[:from].blank?
+request_stream = Monkeyshines::FlatFileRequestStream.new(opts[:from], ShorturlRequest)
+# Scrape Store
+Trollop::die :store_db, "gives the tokyo cabinet db handle to store into" if opts[:store_db].blank?
+store = Monkeyshines::ScrapeStore::ReadThruStore.new(opts[:store_db], true) # must exist
+Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
 
-class Monkeyshines::FlatFileScrapeStore
-  attr_accessor :file, :filename
-  def initialize filename
-    self.filename = filename
-    self.file     = File.open(filename, "w")
-  end
-  def << contents
-    p contents.to_flat
-    self.file << contents.to_flat.join("\t") + "\n"
-  end
-end
+# Scraper
+scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new('bit.ly')
 
-scraper = Monkeyshines::HttpScraper.new('twitter.com')
-reqs    = Monkeyshines::FlatFileRequestStream.new(request_filename, SimpleScrapeRequest)
-store   = Monkeyshines::FlatFileScrapeStore.new(dump_filename)
-reqs.each do |scrape_request|
-  p scrape_request
-  store << scraper.get(scrape_request)
+
+# Bulk load into read-thru cache.
+iter  = 0
+request_stream.each do |url|
+  scrape_request = ShorturlRequest.new url
+  # $stderr.puts [Time.now, iter, scrape_request.url].join("\t") if ((iter+=1) % 1 == 0)
+  # store.set(scrape_request.url){ scrape_request }
+  result = scraper.get scrape_request.url
+  p result
+  sleep 1
 end
+store.close
+scraper.finish
