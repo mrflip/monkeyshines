@@ -9,31 +9,26 @@ require 'shorturl_request'
 require 'trollop' # gem install trollop
 
 opts = Trollop::options do
-  opt :from,      "Flat file of scrapes", :type => String
-  opt :store_db,  "Tokyo cabinet db name", :type => String
+  opt :from,      "Flat file of scrapes",           :type => String
+  opt :store_db,  "Tokyo cabinet db name",          :type => String
+  opt :skip,      "Initial requests to skip ahead", :type => Integer
 end
 
 # Request stream
-Trollop::die :from, "gives the scrapes to load" if opts[:from].blank?
-request_stream = Monkeyshines::FlatFileRequestStream.new(opts[:from], ShorturlRequest)
+request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+
 # Scrape Store
-Trollop::die :store_db, "gives the tokyo cabinet db handle to store into" if opts[:store_db].blank?
-store = Monkeyshines::ScrapeStore::ReadThruStore.new(opts[:store_db], true) # must exist
-Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
+store = Monkeyshines::ScrapeStore::ReadThruStore.new_from_command_line opts
 
 # Scraper
-scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new('bit.ly')
-
+scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 
 # Bulk load into read-thru cache.
-iter  = 0
-request_stream.each do |url|
-  scrape_request = ShorturlRequest.new url
-  # $stderr.puts [Time.now, iter, scrape_request.url].join("\t") if ((iter+=1) % 1 == 0)
-  # store.set(scrape_request.url){ scrape_request }
-  result = scraper.get scrape_request.url
-  p result
-  sleep 1
+Monkeyshines.logger.info "Beginning scrape itself"
+Monkeyshines.log_every 100, :scrape_request, :starting_at => opts[:skip]
+request_stream.each do |scrape_request|
+  result = store.set( scrape_request.url ){ scraper.get(scrape_request) }
+  Monkeyshines.log_occasional(:scrape_request){|iter| [iter, scrape_request.response_code, result, scrape_request.url].join("\t") }
 end
 store.close
 scraper.finish
