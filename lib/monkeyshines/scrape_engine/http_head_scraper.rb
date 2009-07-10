@@ -1,6 +1,8 @@
+require 'monkeyshines/scrape_engine/http_scraper'
+
 module Monkeyshines
-  module Scraper
-    class HttpHeadScraper
+  module ScrapeEngine
+    class HttpHeadScraper < HttpScraper
 
       #
       # Get the redirect location... don't follow it, just request and store it.
@@ -19,7 +21,7 @@ module Monkeyshines
         end
         self.scraped_at = TwitterFriends::StructModel::ModelCommon.flatten_date(DateTime.now) if self.scraped_at.blank?
       end
-      
+
     end
   end
 end
