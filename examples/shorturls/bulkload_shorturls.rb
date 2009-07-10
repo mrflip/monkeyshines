@@ -1,44 +1,35 @@
 #!/usr/bin/env ruby
 require 'rubygems'
-$: << File.dirname(__FILE__)+'/lib'
+$: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
 require 'wukong'
 require 'monkeyshines'
-require 'monkeyshines/scrape_store/read_thru_cache'
+require 'monkeyshines/scrape_store/read_thru_store'
+require 'monkeyshines/request_stream'
+require 'shorturl_request'
+require 'trollop' # gem install trollop
 
-request_filename = ARGV[0]
-if ! request_filename
-  warn "Please give the name of a file holding URLs to scrape"; exit
-end
-dump_filename = "/tmp/req_dump.tsv"
-
-class ShorturlRequest < Struct.new(
-    :short_url,
-    :scraped_at, :response_code, :response_message,
-    :contents )
+opts = Trollop::options do
+  opt :from,      "Flat file of scrapes", :type => String
+  opt :store_db,  "Tokyo cabinet db name", :type => String
 end
 
-class String
-  def to_flat
-    self
-  end
-end
+# Request stream
+Trollop::die :from, "gives the scrapes to load" if opts[:from].blank?
+request_stream = Monkeyshines::FlatFileRequestStream.new(opts[:from], ShorturlRequest)
+# Scrape Store
+Trollop::die :store_db, "gives the tokyo cabinet db handle to store into" if opts[:store_db].blank?
+store = Monkeyshines::ScrapeStore::ReadThruStore.new(opts[:store_db], false) # must exist
+Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
 
-class Monkeyshines::FlatFileRequestStream
-  attr_accessor :request_file
-  def initialize filename
-    self.request_file = File.open(filename)
-  end
-  def each &block
-    self.request_file.each do |line|
-
-    end
-  end
+# Bulk load into read-thru cache.
+iter  = 0
+request_stream.each do |scrape_request|
+  $stderr.puts [Time.now, iter, scrape_request.short_url].join("\t") if ((iter+=1) % 10_000 == 0)
+  store.set(scrape_request.short_url){ scrape_request }
 end
+store.close
 
-scraper = Monkeyshines::HttpScraper.new('twitter.com')
-reqs    = Monkeyshines::FlatFileRequestStream.new(request_filename, SimpleScrapeRequest)
-store   = Monkeyshines::FlatFileScrapeStore.new(dump_filename)
-reqs.each do |scrape_request|
-  p scrape_request
-  store << scraper.get(scrape_request)
-end
+# On a DB with 2.5M entries optimized for 39M entries, this loads about 250k/min
+#
+# You can optimize with something like
+#   store.db.optimize(2 * 39_000_000, -1, -1, TokyoCabinet::TDB::TLARGE)
