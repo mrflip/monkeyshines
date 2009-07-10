@@ -1,7 +1,7 @@
 class ShorturlRequest < Struct.new(
     :url,
     :scraped_at,
-    :response_code,
+    :response_code, :response_message,
     :expanded_url
     )
 

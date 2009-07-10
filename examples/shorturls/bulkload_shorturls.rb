@@ -18,14 +18,17 @@ Trollop::die :from, "gives the scrapes to load" if opts[:from].blank?
 request_stream = Monkeyshines::FlatFileRequestStream.new(opts[:from], ShorturlRequest)
 # Scrape Store
 Trollop::die :store_db, "gives the tokyo cabinet db handle to store into" if opts[:store_db].blank?
-store = Monkeyshines::ScrapeStore::ReadThruStore.new(opts[:store_db], false) # must exist
+store = Monkeyshines::ScrapeStore::ReadThruStore.new(opts[:store_db], true) # must exist
 Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
 
+
+
+
 # Bulk load into read-thru cache.
-iter  = 0
+iter  = -1
 request_stream.each do |scrape_request|
-  $stderr.puts [Time.now, iter, scrape_request.short_url].join("\t") if ((iter+=1) % 10_000 == 0)
-  store.set(scrape_request.short_url){ scrape_request }
+  Monkeyshines.logger.info [iter, scrape_request.url].join("\t") if ((iter+=1) % 10_000 == 0)
+  store.set(scrape_request.url){ scrape_request }
 end
 store.close
 
