@@ -27,6 +27,7 @@ scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 Monkeyshines.logger.info "Beginning scrape itself"
 Monkeyshines.log_every 100, :scrape_request, :starting_at => opts[:skip]
 request_stream.each do |scrape_request|
+  next if scrape_request.url =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at)}
   result = store.set( scrape_request.url ){ scraper.get(scrape_request) }
   Monkeyshines.log_occasional(:scrape_request){|iter| [iter, scrape_request.response_code, result, scrape_request.url].join("\t") }
 end
