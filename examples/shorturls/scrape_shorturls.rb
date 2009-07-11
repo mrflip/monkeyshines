@@ -15,7 +15,19 @@ opts = Trollop::options do
 end
 
 # Request stream
-request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+#request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+
+class SequentialUrlRequestStream < Monkeyshines::RequestStream
+  attr_accessor :base_url, request_pattern
+  def initialize base_url, request_pattern
+    self.base_url        = base_url
+    self.request_pattern = request_pattern
+  end
+  def each *args, &block
+    request_pattern.each(*args, &block)
+  end
+end
+request_stream = SequentialUrlRequestStream.new('http://tinyurl.com/', ('aaaaaa'..'lszzzz'))
 
 # Scrape Store
 store = Monkeyshines::ScrapeStore::ReadThruStore.new_from_command_line opts
@@ -30,6 +42,7 @@ request_stream.each do |scrape_request|
   next if scrape_request.url =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at)}
   result = store.set( scrape_request.url ){ scraper.get(scrape_request) }
   Monkeyshines.log_occasional(:scrape_request){|iter| [iter, scrape_request.response_code, result, scrape_request.url].join("\t") }
+  sleep 0.2
 end
 store.close
 scraper.finish
