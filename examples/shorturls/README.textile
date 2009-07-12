@@ -1,0 +1,17 @@
+
+
+
+* Archive Team effort to scrape: 
+
+---
+
+* http://joshua.schachter.org/2009/04/on-url-shorteners.html
+* http://snook.ca/archives/php/url-shortener/
+* http://simonwillison.net/2009/Apr/11/revcanonical/
+
+
+--
+
+Base 62 encoding:
+* http://refactormycode.com/codes/125-base-62-encoding
+* http://github.com/jtzemp/base62/tree/master

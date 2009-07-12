@@ -37,6 +37,7 @@ module Monkeyshines
       def get(key)    db[key]  end
       def [](key)     db[key]  end
       def close()     db.close end
+      def size()      db.size  end
 
       #
       # Load standard command-line options
@@ -44,7 +45,7 @@ module Monkeyshines
       def self.new_from_command_line cmdline_opts, default_opts={}
         options = default_opts.merge(cmdline_opts)
         Trollop::die :store_db, "is required: a tokyo cabinet db to store responses" if options[:store_db].blank?
-        store = self.new(options[:store_db], options[:db_create])
+        store = self.new(options[:store_db], options[:create_db])
         Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
         store
       end
