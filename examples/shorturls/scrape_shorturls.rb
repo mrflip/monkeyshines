@@ -29,8 +29,11 @@ opts = Trollop::options do
 end
 
 # Request stream
-#request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
-request_stream = RandomSequentialUrlRequestStream.new_from_command_line opts, :request_klass => ShorturlRequest
+if opts[:from]
+  request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+elsif opts[:base_url]
+  request_stream =    RandomSequentialUrlRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+else raise "Need either a --from flat file to read or a --base_url to draw requests from" end
 
 # Scrape Store
 store   = Monkeyshines::ScrapeStore::ReadThruStore.new_from_command_line opts
