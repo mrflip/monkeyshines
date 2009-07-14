@@ -2,9 +2,13 @@ module Monkeyshines
   module ScrapeRequest
 
     module Paginated
-      def requests
-        (1..pages).each do
-          make_request template_request
+      def is_last? result, page
+        ( (curr_page     > max_pages) )
+      end
+
+      def each_page *pageinfo, &block
+        (1..pages).each do |page|
+          yield make_request(template_request, page, *pageinfo)
         end
       end
 
@@ -40,28 +44,44 @@ module Monkeyshines
     # * stop when max_pages is reached or a successful request gives fewer than
     #   rsrc_per_page
     #
+    #
+    # The first
+    #
+    #    req?min_id=1234&max_id=
+    #    => [ [8675, ...], ..., [8012, ...] ] # 100 results
+    #    req?min_id=1234&max_id=8011
+    #    => [ [7581, ...], ..., [2044, ...] ] # 100 results
+    #    req?min_id=1234&max_id=2043
+    #    => [ [2012, ...], ..., [1234, ...] ] #  69 results
+    #
+    # * The search terminates when
+    # ** max_requests requests have been made, or
+    # ** the limit params interval is zero,    or
+    # ** a successful result with fewer than rsrc_per_page is received.
+    #
+    # * You will want to save <req?min_id=8676&max_id=""> for later scrape
+    #
     module PaginatedWithLimit
-      def rsrc_since_last_scrape
-        time_since_last_scrape = Time.now.utc - last_scraped_at
-        rsrc_rate * time_since_last_scrape
+      def is_last? result, page
+        ( (curr_page     > max_pages)     ||
+          (result.length < rsrc_per_page))
       end
 
-
-      def is_last result
-        # num_results =
-        num < rsrc_per_page
+      def update_limit_param result
+        self.max_id = result.last['id']
       end
 
-      def requests &block
-        max_pages.times do
-          result = yield make_request(template_request)
-          update_params_from result
-          break if is_last(result)
+      def each_page *pageinfo, &block
+        (1..pages).each do |page|
+          # get results
+          result = yield make_request(template_request, page, *pageinfo)
+          # save the
+          new_lower_limit ||= result.upper_limit
+          #
+          update_limit_param result
+          #
+          break if is_last?(result, page)
         end
-      end
-
-      def pages
-        ( rsrc_since_last_scrape / rsrc_per_page ).clamp(0, max_pages)
       end
 
     end
