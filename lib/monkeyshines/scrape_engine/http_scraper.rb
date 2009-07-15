@@ -80,9 +80,8 @@ module Monkeyshines
       # Make request, return satisfied scrape_request
       def get scrape_request
         begin
-          response = perform_request scrape_request.url
-          scrape_request.response_code     = response.code
-          scrape_request.response          = response
+          response = perform_request(scrape_request.url)
+          scrape_request.response = response
           backoff response
         rescue Exception => e
           warn [e.to_s, scrape_request.to_s].join("\t")
