@@ -1,4 +1,5 @@
 require 'logger'
+require 'monkeyshines/extensions'
 
 module Monkeyshines
   autoload :RequestStream,         'monkeyshines/request_stream'
