@@ -2,7 +2,7 @@ module Monkeyshines
   module ScrapeRequest
 
     module Paginated
-      def is_last? result, page
+      def is_last? response, page
         ( (curr_page     > max_pages) )
       end
 
@@ -10,6 +10,22 @@ module Monkeyshines
         (1..pages).each do |page|
           yield make_request(template_request, page, *pageinfo)
         end
+      end
+
+      # How often an item rolls in, on average
+      def avg_item_rate
+        total_items / (last_item_at - first_item_at)
+      end
+
+      MIN_RESCHED_INTERVAL = 60*1
+      MAX_RESCHED_INTERVAL = 60*60*24
+      def rescheduled
+        req = self.dup
+        req.min_id         = last_item_id
+        req.min_time       = last_item_at
+        next_scrape_in     = (0.8 * items_per_page) / avg_items_rate
+        req.next_scrape_at = last_item_at + next_scrape_in.clamp(MIN_RESCHED_INTERVAL, MAX_RESCHED_INTERVAL)
+        req
       end
 
       def self.included base
@@ -20,13 +36,13 @@ module Monkeyshines
     end
 
     module PaginatedByVelocity
-      def rsrc_since_last_scrape
+      def items_since_last_scrape
         time_since_last_scrape = Time.now.utc - last_scraped_at
-        rsrc_rate * time_since_last_scrape
+        items_rate * time_since_last_scrape
       end
 
       def pages
-        ( rsrc_since_last_scrape / rsrc_per_page ).clamp(0, max_pages)
+        ( items_since_last_scrape / items_per_page ).clamp(0, max_pages)
       end
 
       # def self.included base
@@ -42,45 +58,45 @@ module Monkeyshines
     # * request successive pages,
     # * use info on the requested page to set the next limit parameter
     # * stop when max_pages is reached or a successful request gives fewer than
-    #   rsrc_per_page
+    #   items_per_page
     #
     #
     # The first
     #
     #    req?min_id=1234&max_id=
-    #    => [ [8675, ...], ..., [8012, ...] ] # 100 results
+    #    => [ [8675, ...], ..., [8012, ...] ] # 100 items
     #    req?min_id=1234&max_id=8011
-    #    => [ [7581, ...], ..., [2044, ...] ] # 100 results
+    #    => [ [7581, ...], ..., [2044, ...] ] # 100 items
     #    req?min_id=1234&max_id=2043
-    #    => [ [2012, ...], ..., [1234, ...] ] #  69 results
+    #    => [ [2012, ...], ..., [1234, ...] ] #  69 items
     #
     # * The search terminates when
     # ** max_requests requests have been made, or
     # ** the limit params interval is zero,    or
-    # ** a successful result with fewer than rsrc_per_page is received.
+    # ** a successful response with fewer than items_per_page is received.
     #
     # * You will want to save <req?min_id=8676&max_id=""> for later scrape
     #
     module PaginatedWithLimit
-      def is_last? result, page
+      def is_last? response, page
         ( (curr_page     > max_pages)     ||
-          (result.length < rsrc_per_page))
+          (response.length < items_per_page))
       end
 
-      def update_limit_param result
-        self.max_id = result.last['id']
+      def update_limit_param response
+        self.max_id = response.last['id']
       end
 
       def each_page *pageinfo, &block
         (1..pages).each do |page|
-          # get results
-          result = yield make_request(template_request, page, *pageinfo)
+          # get responses
+          response = yield make_request(template_request, page, *pageinfo)
           # save the
-          new_lower_limit ||= result.upper_limit
+          new_lower_limit ||= response.upper_limit
+          # s
+          update_limit_param response
           #
-          update_limit_param result
-          #
-          break if is_last?(result, page)
+          break if is_last?(response, page)
         end
       end
 
