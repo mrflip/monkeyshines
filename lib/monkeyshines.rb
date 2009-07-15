@@ -5,6 +5,10 @@ module Monkeyshines
   autoload :FlatFileRequestStream, 'monkeyshines/request_stream'
   autoload :ScrapeStore,           'monkeyshines/scrape_store'
 
+  # Dumping ground for configuration values
+  CONFIG = {}
+
+  # Common logger
   def self.logger
     @logger ||= Logger.new STDERR
   end

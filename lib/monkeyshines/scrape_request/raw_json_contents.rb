@@ -1,5 +1,6 @@
+require 'json'
 module Monkeyshines
-  module ScrapeRequest
+  module RawJsonContents
     def parsed_contents
       return @parsed_contents if @parsed_contents
       return nil unless contents

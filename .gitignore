@@ -13,7 +13,7 @@ nohup.out
 /**/cache/*
 /**/db/*.sqlite3
 *DONTVERSION*
-config/*private.yaml
+config/*private*
 a.out
 *.sw?
 *.o

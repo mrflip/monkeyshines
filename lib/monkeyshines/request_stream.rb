@@ -1,7 +1,7 @@
 module Monkeyshines
   class RequestStream
     attr_accessor :request_klass
-    def initialize request_klass
+    def initialize request_klass, options={}
       self.request_klass = request_klass
     end
 
