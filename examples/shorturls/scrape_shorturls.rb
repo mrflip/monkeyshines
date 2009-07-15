@@ -41,13 +41,16 @@ store   = Monkeyshines::ScrapeStore::ReadThruStore.new_from_command_line opts
 # Scraper
 scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 
+# Log
+monitor = Monkeyshines::Monitor::PeriodicMonitor(
+  :iter_interval => 10, :starting_at => opts[:skip], :time_interval => 60)
+
 # Bulk load into read-thru cache.
 Monkeyshines.logger.info "Beginning scrape itself"
-Monkeyshines.log_occasional_begin :scrape_requests, :every => 10, :starting_at => opts[:skip]
 request_stream.each do |scrape_request|
   # next if scrape_request.url =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at)}
   result = store.set( scrape_request.url ){ scraper.get(scrape_request) }
-  Monkeyshines.log_occasional(:scrape_request){|iter| [iter, store.size, scrape_request.response_code, result, scrape_request.url].join("\t") }
+  monitor.periodically{ Monkeyshines.logger.info [monitor.iter, store.size, scrape_request.response_code, result, scrape_request.url].join("\t") }
   sleep 0.1
 end
 store.close

@@ -42,24 +42,8 @@ module Monkeyshines
   #
   def self.log_occasional tracking_token, &block
     if ((OCCASIONAL_LOG_COUNTER[tracking_token] += 1) % OCCASIONAL_LOG_INTERVAL[tracking_token] == 0)
-      logger.info block.call(OCCASIONAL_LOG_COUNTER[tracking_token])
-    end
-  end
-
-  PERIODIC_LOG_TIMES = {}
-  #
-  # Ex: log if it has been at least 5 minutes since last announcement:
-  #   loop do
-  #     # ... stuff ...
-  #     Monkeyshines.log_periodically(:stuff, 300){ [radiosity, luminance, bifurcation].join("\t") }
-  #   end
-  #
-  def self.log_periodically tracking_token, interval_in_seconds, &block
-    curr  = Time.now.utc.to_f
-    prev   = (PERIODIC_LOG_TIMES[tracking_token]||=curr)
-    if (since = curr-prev) > interval_in_seconds
-      logger.info block.call(since)
-      PERIODIC_LOG_TIMES[tracking_token] = curr
+      result = block.call(OCCASIONAL_LOG_COUNTER[tracking_token])
+      logger.info result
     end
   end
 end
