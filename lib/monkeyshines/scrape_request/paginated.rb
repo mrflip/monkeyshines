@@ -27,7 +27,7 @@ module Monkeyshines
   #
   # * You will want to save <req?min_id=8676&max_id=""> for later scrape
   #
-  module Paginated
+  module PaginatedWithLimit
     #
     # Generates request for each page to be scraped
     # result of block is passed to #acknowledge
@@ -110,4 +110,55 @@ module Monkeyshines
       end
     end
   end
+
+
+
+
+  # #
+  # #
+  # module PaginatedSimply
+  #   def max_pages
+  #     mp = fudge_factor * (n_items - prev_scraped_items) / items_per_page
+  #     return 0 if mp == 0
+  #     (mp+1).clamp(1, max_pages).to_i
+  #   end
+  #
+  #   def begin_pagination!
+  #     self.num_items ||= 0
+  #     self.scrape_id_span   ||= UnionInterval.new
+  #     self.prev_id_span     ||= UnionInterval.new
+  #   end
+  #
+  #   #
+  #   # Feed back info from the scrape
+  #   #
+  #   def acknowledge response
+  #     return unless response && response.items
+  #     self.num_items        += response.num_items
+  #     self.scrape_id_span   << response.id_span
+  #     self.scrape_time_span << response.time_span
+  #   end
+  #
+  #   # How often an item rolls in, on average
+  #   def avg_item_rate
+  #     total_items / (last_item_at - first_item_at)
+  #   end
+  #   # How many items we expect to have accumulated since the last scrape.
+  #   def items_since_last_scrape
+  #     time_since_last_scrape = Time.now.utc - last_scraped_at
+  #     items_rate * time_since_last_scrape
+  #   end
+  #
+  #
+  #   # inject class variables
+  #   def self.included base
+  #     base.class_eval do
+  #       class_inheritable_accessor :items_per_page, :max_pages
+  #       attr_accessor :scrape_id_span, :scrape_time_span
+  #       attr_accessor :prev_id_span,   :prev_time_span
+  #       attr_accessor :num_items
+  #     end
+  #   end
+  # end
+
 end
