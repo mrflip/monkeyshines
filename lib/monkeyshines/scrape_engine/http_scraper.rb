@@ -27,7 +27,7 @@ module Monkeyshines
       #
       def http host, port=nil
         return @http if (@http && (@http.started?) && (@host == host))
-        finish       if (@http && (@http.started?) && (@host != host))
+        close        if (@http && (@http.started?) && (@host != host))
         @host = host
         @connection_opened_at = Time.now
         Monkeyshines.logger.info "Opening HTTP connection for #{@host} at #{@connection_opened_at}"
@@ -37,7 +37,7 @@ module Monkeyshines
       end
 
       # Close the current session, if any
-      def finish
+      def close
         Monkeyshines.logger.info "Closing HTTP connection for #{@host} from #{@connection_opened_at}"
         @http.finish if @http
         @http = nil
@@ -84,10 +84,18 @@ module Monkeyshines
           scrape_request.response = response
           backoff response
         rescue Exception => e
-          warn [e.to_s, scrape_request.to_s].join("\t")
+          warn [e.to_s, scrape_request.to_s[0..2000].gsub(/[\n\r\t]+/, ' ')].join("\t")
+          close # restart the connection
         end
         scrape_request.scraped_at = Time.now.utc.to_flat
         scrape_request
+      end
+
+      def get_and_report_timing *args
+        start = Time.now.to_f
+        response = get *args
+        Monkeyshines.logger.info( Time.now.to_f - start )
+        response
       end
     end
 
