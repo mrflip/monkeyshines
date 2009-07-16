@@ -34,6 +34,9 @@ class UnionInterval
   def empty?
     min && max && (min > max)
   end
+  def size
+    max - min
+  end
   # string conversion:
   #   #<span:7..956734>
   def to_s

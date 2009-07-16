@@ -18,5 +18,16 @@ module Monkeyshines
       self.response_code = response.code
       self.contents      = response.body
     end
+
+    # Checks that the response parses and has the right data structure.
+    # if healthy? is true things should generally work
+    def healthy?
+    end
+
+    #
+    # by default, just returns the contents
+    def parsed_response
+      contents
+    end
   end
 end

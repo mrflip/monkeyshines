@@ -47,7 +47,7 @@ module Monkeyshines
     class PeriodicLogger < PeriodicMonitor
       def periodically &block
         super do
-          result = [ "%7d"%iter, "%7.1"%rate, (block ? block.call : nil) ].flatten
+          result = [ "%7d"%iter, "%7.1f"%rate, (block ? block.call : nil) ].flatten
           Monkeyshines.logger.info result.join("\t")
         end
       end
