@@ -34,7 +34,11 @@ class UnionInterval
   def empty?
     min && max && (min > max)
   end
+  def include? val
+    val && (!min || (val >= min)) && (!max || (val <= max))
+  end
   def size
+    return 0 unless max && min
     max - min
   end
   # string conversion:
