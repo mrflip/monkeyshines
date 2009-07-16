@@ -35,7 +35,10 @@ module Monkeyshines
       def <<(obj)
         dump_file << obj.to_flat.join("\t")+"\n"
       end
-
+      # delegates to +<<()+ -- writes the object to the file
+      def save obj
+        self << obj
+      end
     end
   end
 end

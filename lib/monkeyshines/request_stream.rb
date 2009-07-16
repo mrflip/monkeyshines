@@ -35,8 +35,9 @@ module Monkeyshines
 
     def each &block
       file.each do |line|
-        req = request_klass.new( *line.chomp.split("\t") )
-        yield req
+        attrs = line.chomp.split("\t")
+        next if attrs.blank?
+        yield request_klass.new(*attrs)
       end
     end
   end

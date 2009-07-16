@@ -29,7 +29,7 @@ module Monkeyshines
       begin_pagination!
       (1..hard_request_limit).each do |page|
         response = yield make_request(page, pageinfo)
-        acknowledge response
+        acknowledge(response, page)
         break if is_last?(response, page)
       end
       finish_pagination!
@@ -37,7 +37,6 @@ module Monkeyshines
 
     # Set up bookkeeping for pagination tracking
     def begin_pagination!
-      puts "Paginated begin_pagination!"
     end
 
     # Finalize bookkeeping at conclusion of session.
@@ -47,7 +46,7 @@ module Monkeyshines
     #
     # Feed back info from the scrape
     #
-    def acknowledge response
+    def acknowledge response, page
     end
 
     # return true if the next request would be pointless (true if, perhaps, the
@@ -70,8 +69,13 @@ module Monkeyshines
     #
     # How often an item rolls in, on average
     #
-    def items_rate interval
-      num_items.to_f / interval.size.to_f
+    def items_rate
+      return 1/(60*60*24) unless prev_timespan && prev_timespan.min
+      interval = prev_timespan.size
+      # In case there's one item
+      interval = (Time.now - prev_timespan.min) if (interval == 0)
+      # items / time
+      num_items.to_f / interval.to_f
     end
 
     #
@@ -156,7 +160,6 @@ module Monkeyshines
 
     # Set up bookkeeping for pagination tracking
     def begin_pagination!
-      puts "PaginatedWithLimit begin_pagination!"
       self.num_items     ||= 0
       self.sess_span     ||= UnionInterval.new
       self.sess_timespan ||= UnionInterval.new
@@ -166,20 +169,37 @@ module Monkeyshines
     end
 
     def finish_pagination!
-      self.prev_timespan << sess_timespan
       self.prev_span     << sess_span
+      self.prev_timespan << sess_timespan
+      self.sess_span     = UnionInterval.new
+      self.sess_timespan = UnionInterval.new
       super
     end
 
     #
     # Feed back info from the scrape
     #
-    def acknowledge response
+    def acknowledge response, page
+      super response, page
       return unless response && response.items
-      self.num_items     += response.num_items
+      count_new_items response
+      update_spans response
+    end
+
+    # account for additional items
+    def count_new_items response
+      num_items = response.num_items
+      # if there was overlap with a previous scrape, we have to count the items by hand
+      if prev_span.max && (response.span.min < prev_span.max)
+        num_items = response.items.inject(0){|n,item| (prev_span.include? item['id']) ? n : n+1 }
+      end
+      self.num_items     += num_items
+    end
+
+    def update_spans response
+      # Update intervals
       self.sess_span     << response.span
       self.sess_timespan << response.timespan
-      super
     end
 
     # gap between oldest scraped in this session and last one scraped in
@@ -187,18 +207,6 @@ module Monkeyshines
     def unscraped_span
       UnionInterval.new(prev_span.max, sess_span.min)
     end
-
-    # MIN_RESCHED_INTERVAL = 60*1
-    # MAX_RESCHED_INTERVAL = 60*60*24
-    #
-    # def rescheduled
-    #   req = self.dup
-    #   req.min_id         = last_item_id
-    #   req.min_time       = last_item_at
-    #   next_sess_in     = (0.8 * items_per_page) / avg_items_rate
-    #   req.next_scrape_at = last_item_at + next_scrape_in.clamp(MIN_RESCHED_INTERVAL, MAX_RESCHED_INTERVAL)
-    #   req
-    # end
 
     # inject class variables
     def self.included base
