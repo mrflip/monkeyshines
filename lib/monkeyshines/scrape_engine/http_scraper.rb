@@ -63,8 +63,8 @@ module Monkeyshines
       def backoff response
         sleep_time = 0
         case response
-        when Net::HTTPSuccess             then return
-        when Net::HTTPRedirection         then return
+        when Net::HTTPSuccess             then return         # 2xx
+        when Net::HTTPRedirection         then return         # 3xx
         when Net::HTTPBadRequest          then sleep_time = 5 # 400 (rate limit, probably)
         when Net::HTTPUnauthorized        then sleep_time = 0 # 401 (protected user, probably)
         when Net::HTTPForbidden           then sleep_time = 4 # 403 update limit
