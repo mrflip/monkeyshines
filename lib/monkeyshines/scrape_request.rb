@@ -30,5 +30,10 @@ module Monkeyshines
     def parsed_response
       contents
     end
+
+    # Lets a scrape_request act as its own session
+    def each_request pageinfo={}, &block
+      yield self
+    end
   end
 end

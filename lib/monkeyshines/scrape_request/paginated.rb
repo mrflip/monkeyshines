@@ -29,6 +29,7 @@ module Monkeyshines
       begin_pagination!
       (1..hard_request_limit).each do |page|
         response = yield make_request(page, pageinfo)
+        warn 'nil response' unless response
         acknowledge(response, page)
         break if is_last?(response, page)
       end
@@ -66,39 +67,16 @@ module Monkeyshines
       hard_request_limit
     end
 
-    #
-    # How often an item rolls in, on average
-    #
-    def items_rate
-      return 1/(60*60*24) unless prev_timespan && prev_timespan.min
-      interval = prev_timespan.size
-      # In case there's one item
-      interval = (Time.now - prev_timespan.min) if (interval == 0)
-      # items / time
-      num_items.to_f / interval.to_f
-    end
-
-    #
-    # How many items we expect to have accumulated since the last scrape.
-    #
-    def items_since_last_scrape
-      time_since_last_scrape = Time.now.utc - prev_timespan.max
-      items_rate(prev_timespan) * time_since_last_scrape
-    end
-
     # inject class variables
     def self.included base
       base.class_eval do
         # Hard request limit: do not in any case exceed this number of requests
         class_inheritable_accessor :hard_request_limit
-        # Span of items gathered in this scrape session.
-        attr_accessor :sess_span, :sess_timespan
-        # Values from the previous scrape session
-        attr_accessor :prev_span,   :prev_timespan
         # max items per page, from API
         class_inheritable_accessor :items_per_page
-        # Number of items collected in this and previous sessions.
-        attr_accessor :num_items
+        #
+        # Span of items gathered in this scrape session.
+        attr_accessor :sess_items, :sess_span, :sess_timespan
       end
     end
   end
@@ -160,17 +138,18 @@ module Monkeyshines
 
     # Set up bookkeeping for pagination tracking
     def begin_pagination!
-      self.num_items     ||= 0
-      self.sess_span     ||= UnionInterval.new
-      self.sess_timespan ||= UnionInterval.new
-      self.prev_span     ||= UnionInterval.new
-      self.prev_timespan ||= UnionInterval.new
+      self.sess_items    ||= 0
+      self.sess_span       = UnionInterval.new
+      self.sess_timespan   = UnionInterval.new
       super
     end
 
     def finish_pagination!
-      self.prev_span     << sess_span
-      self.prev_timespan << sess_timespan
+      self.prev_rate     = avg_rate
+      self.prev_items    = prev_items.to_i + sess_items.to_i
+      self.prev_span     = sess_span + prev_span
+      self.new_items     = sess_items.to_i + new_items.to_i
+      self.sess_items    = 0
       self.sess_span     = UnionInterval.new
       self.sess_timespan = UnionInterval.new
       super
@@ -190,10 +169,11 @@ module Monkeyshines
     def count_new_items response
       num_items = response.num_items
       # if there was overlap with a previous scrape, we have to count the items by hand
+      prev_span = self.prev_span
       if prev_span.max && (response.span.min < prev_span.max)
         num_items = response.items.inject(0){|n,item| (prev_span.include? item['id']) ? n : n+1 }
       end
-      self.num_items     += num_items
+      self.sess_items += num_items
     end
 
     def update_spans response
@@ -202,15 +182,43 @@ module Monkeyshines
       self.sess_timespan << response.timespan
     end
 
+
+    def sess_rate
+      return nil if (!sess_timespan) || (sess_timespan.size == 0)
+      sess_items.to_f / sess_timespan.size.to_f
+    end
+    #
+    # How often an item rolls in, on average
+    #
+    def avg_rate
+      return nil if (prev_items.to_f + sess_items.to_f == 0)
+      prev_weight = prev_items.to_f ** 0.75
+      sess_weight = sess_items.to_f
+      weighted_sum = (
+        (prev_rate.to_f * prev_weight) + # damped previous avg
+        (sess_rate.to_f * sess_weight) ) # current avg
+      rt = weighted_sum / (prev_weight + sess_weight)
+      rt
+    end
+
     # gap between oldest scraped in this session and last one scraped in
     # previous session.
     def unscraped_span
-      UnionInterval.new(prev_span.max, sess_span.min)
+      UnionInterval.new(prev_span_max, sess_span.min)
+    end
+    # span of previous scrape
+    def prev_span
+      @prev_span ||= UnionInterval.new(prev_span_min, prev_span_max)
+    end
+    def prev_span= min_max
+      self.prev_span_min, self.prev_span_max = min_max.to_a
+      @prev_span = UnionInterval.new(prev_span_min, prev_span_max)
     end
 
     # inject class variables
     def self.included base
       base.class_eval do
+        attr_accessor :new_items
         # include Monkeyshines::Paginated
       end
     end

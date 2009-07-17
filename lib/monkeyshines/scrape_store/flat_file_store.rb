@@ -9,7 +9,7 @@ module Monkeyshines
       #
       # +filename_root+  : first part of name for files
       #
-      def initialize filename
+      def initialize filename, options={}
         self.filename = filename
       end
 
@@ -20,6 +20,7 @@ module Monkeyshines
       def dump_file
         return @dump_file if @dump_file
         mkdir!
+        Monkeyshines.logger.info "Opening file #{filename} for appending"
         @dump_file = File.open(filename, "a")
       end
       # Close the dump file
@@ -29,7 +30,10 @@ module Monkeyshines
       end
       # Ensure the dump_file's directory exists
       def mkdir!
-        FileUtils.mkdir_p File.dirname(filename)
+        dir = File.dirname(filename)
+        return if File.directory?(dir)
+        Monkeyshines.logger.info "Making directory #{dir}"
+        FileUtils.mkdir_p dir
       end
       # write to the dump_file
       def <<(obj)
@@ -40,5 +44,7 @@ module Monkeyshines
         self << obj
       end
     end
+
   end
 end
+
