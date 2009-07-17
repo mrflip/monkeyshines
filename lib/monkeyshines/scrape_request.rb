@@ -31,7 +31,7 @@ module Monkeyshines
       contents
     end
 
-    # Lets a scrape_request act as its own session
+    # Lets a scrape_request act as its own scrape_job
     def each_request pageinfo={}, &block
       yield self
     end

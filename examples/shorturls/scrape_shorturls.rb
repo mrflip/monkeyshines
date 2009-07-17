@@ -20,7 +20,7 @@ require 'trollop' # gem install trollop
 opts = Trollop::options do
   opt :from,            "Flat file of scrapes",                                                      :type => String
   opt :store_db,        "Tokyo cabinet db name",                                                     :type => String
-  opt :create_db,       "Create Tokyo cabinet if --store-db doesn\'t exist?",                        :type => String
+  opt :create_db,       "Create Tokyo cabinet if --store-db doesn\'t exist?",                        :type => String, :default => false
   opt :skip,            "Initial requests to skip ahead",                                            :type => Integer
   opt :base_url,        "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
   opt :min_limit,       "Smallest sequential URL to randomly visit",                                 :type => Integer

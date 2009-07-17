@@ -14,7 +14,7 @@ module Monkeyshines
         :min_resched_delay => 60*5,     # 5 minutes
         :max_resched_delay => 60*60*24, # one day
         :priority          => 65536,    # default job queue priority
-        :time_to_run       => 60*5,     # 5 minutes to complete a session or assume dead
+        :time_to_run       => 60*5,     # 5 minutes to complete a job or assume dead
       }
       DEFAULT_BEANSTALK_POOL = ['localhost:11300']
       attr_accessor :beanstalk_pool, :items_goal, :min_resched_delay, :max_resched_delay, :options
@@ -31,10 +31,10 @@ module Monkeyshines
         self.max_resched_delay = self.options.delete :max_resched_delay
       end
 
-      def new_request_from_job job
-        args           = job.body.split("\t")
+      def scrape_job_from_qjob qjob
+        args           = qjob.body.split("\t")
         # request_klass = Wukong.class_from_resource(args.shift)
-        session        = request_klass.new(*args[1..-1])
+        scrape_job     = request_klass.new(*args[1..-1])
       end
 
       #
@@ -42,12 +42,12 @@ module Monkeyshines
       #
       def each &block
         loop do
-          job = reserve_job! or next
-          session = new_request_from_job(job)
-          # Run the scrape session
-          yield session
+          qjob = reserve_job! or next
+          scrape_job = scrape_job_from_qjob(qjob)
+          # Run the scrape scrape_job
+          yield scrape_job
           # reschedule for later
-          reschedule job, session
+          reschedule qjob, scrape_job
           sleep 1
         end
       end
@@ -65,9 +65,9 @@ module Monkeyshines
 
       def reserve_job! to=9
         # Reserve a job
-        begin job = job_queue.reserve(to)
+        begin qjob = job_queue.reserve(to)
         rescue Exception => e ; warn e ; sleep 1 ; return ; end
-        job
+        qjob
       end
 
       # ===========================================================================
@@ -78,48 +78,48 @@ module Monkeyshines
       # if we can't determine an actual rate, uses max_resched_delay (assumes it
       # is rare)
       #
-      def delay_to_next_scrape session
-        rate  = session.avg_rate or return max_resched_delay
+      def delay_to_next_scrape scrape_job
+        rate  = scrape_job.avg_rate or return max_resched_delay
         delay = items_goal / rate
         delay = delay.clamp(min_resched_delay, max_resched_delay)
         delay.to_i
       end
 
-      def log session, delay=nil, priority=nil
-        delay ||= delay_to_next_scrape(session)
-        rate_str = session.avg_rate ? "%8.3f" % ((1.0/60)*session.items_per_page/session.avg_rate) : "        "
+      def log scrape_job, delay=nil, priority=nil
+        delay ||= delay_to_next_scrape(scrape_job)
+        rate_str = scrape_job.avg_rate ? "%8.3f" % ((1.0/60)*scrape_job.items_per_page/scrape_job.avg_rate) : "        "
 
-        ll = "Rescheduling #{"%-25s"%session.query_term}"
+        ll = "Rescheduling #{"%-25s"%scrape_job.query_term}"
         ll << (priority ? " %6d" % priority : "       ")
-        ll << " (#{rate_str} min/pg - #{"%6d" % (session.prev_items||0)} items #{"%4d"%(session.new_items||0)} new"
+        ll << " (#{rate_str} min/pg - #{"%6d" % (scrape_job.prev_items||0)} items #{"%4d"%(scrape_job.new_items||0)} new"
         # ll << ", goal: #{items_goal})"
         ll << " to #{"%7.1f" % (delay/60.0)} min, #{(Time.now + delay).strftime("%Y-%m-%d %H:%M:%S")}"
         Monkeyshines.logger.info ll
       end
 
       # delegates to #save()
-      def <<(session)
-        save session
+      def <<(scrape_job)
+        save scrape_job
       end
       #
-      # Flattens the session and enqueues it with a delay appropriate for the
+      # Flattens the scrape_job and enqueues it with a delay appropriate for the
       # average item rate so far. You can explicitly supply a +priority+ to
       # override the priority set at instantiation.
-      def save session, priority=nil, delay=nil
-        body       = session.to_flat.join("\t")
-        delay    ||= delay_to_next_scrape(session)
+      def save scrape_job, priority=nil, delay=nil
+        body       = scrape_job.to_flat.join("\t")
+        delay    ||= delay_to_next_scrape(scrape_job)
         priority ||= options[:priority]
-        log session, delay, priority
+        log scrape_job, delay, priority
         job_queue.put body, priority, delay, options[:time_to_run]
       end
 
       #
-      # Re-insert the job at the same priority
+      # Re-insert the qjob at the same priority
       #
-      def reschedule job, session
-        priority = job.stats['pri']
-        job.delete
-        self.save session, priority
+      def reschedule qjob, scrape_job
+        priority = qjob.stats['pri']
+        qjob.delete
+        self.save scrape_job, priority
       end
 
     end # class

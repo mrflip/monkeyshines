@@ -40,7 +40,7 @@ module Monkeyshines
     def begin_pagination!
     end
 
-    # Finalize bookkeeping at conclusion of session.
+    # Finalize bookkeeping at conclusion of scrape_job.
     def finish_pagination!
     end
 
@@ -75,7 +75,7 @@ module Monkeyshines
         # max items per page, from API
         class_inheritable_accessor :items_per_page
         #
-        # Span of items gathered in this scrape session.
+        # Span of items gathered in this scrape scrape_job.
         attr_accessor :sess_items, :sess_span, :sess_timespan
       end
     end
@@ -201,8 +201,8 @@ module Monkeyshines
       rt
     end
 
-    # gap between oldest scraped in this session and last one scraped in
-    # previous session.
+    # gap between oldest scraped in this scrape_job and last one scraped in
+    # previous scrape_job.
     def unscraped_span
       UnionInterval.new(prev_span_max, sess_span.min)
     end
