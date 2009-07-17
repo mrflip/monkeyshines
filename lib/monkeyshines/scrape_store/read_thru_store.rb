@@ -15,7 +15,7 @@ module Monkeyshines
       #   end
       #
       def set key, &block
-        return if db.include?(key)
+        return if db.has_key?(key)
         result = block.call() or return
         db.put(key, result.to_hash)
       end

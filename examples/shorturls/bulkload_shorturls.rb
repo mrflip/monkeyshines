@@ -8,29 +8,47 @@ require 'monkeyshines/request_stream'
 require 'shorturl_request'
 require 'trollop' # gem install trollop
 
+require 'tokyocabinet'
+
 opts = Trollop::options do
-  opt :from,      "Flat file of scrapes", :type => String
-  opt :store_db,  "Tokyo cabinet db name", :type => String
+  opt :src_db,        "Tokyo cabinet db name",                            :type => String
+  opt :dest_db_port,  "Tokyo tyrant db port",                             :type => String
 end
 
-# Request stream
-Trollop::die :from, "gives the scrapes to load" if opts[:from].blank?
-request_stream = Monkeyshines::FlatFileRequestStream.new(opts[:from], ShorturlRequest)
-# Scrape Store
-Trollop::die :store_db, "gives the tokyo cabinet db handle to store into" if opts[:store_db].blank?
-store = Monkeyshines::ScrapeStore::ReadThruStore.new(opts[:store_db], true) # must exist
+# 'shorturl_scrapes-twitter-20090711.tdb'
+
+# Tokyo cabinet
+Trollop::die :src_db, "gives the tokyo cabinet db handle to store into" if opts[:src_db].blank?
+src_db = TokyoCabinet::TDB.new
+src_db.open(opts[:src_db], TokyoCabinet::TDB::OREADER)
+
+# Tokyo Tyrant: store
+Trollop::die :dest_db_port, "gives the tokyo cabinet db handle to store into" if opts[:dest_db_port].blank?
+store = Monkeyshines::ScrapeStore::ReadThruStore.new("", opts[:dest_db_port])
 Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
+# Log every N requests
+periodic_log    = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000, :time_interval => 30)
+
+# [ 'tinyurl.com', 'bitly', 'other' ].each_with_index do
 
 
 
 
-# Bulk load into read-thru cache.
-iter  = -1
-request_stream.each do |scrape_request|
-  Monkeyshines.logger.info [iter, scrape_request.url].join("\t") if ((iter+=1) % 10_000 == 0)
-  store.set(scrape_request.url){ scrape_request }
+src_db.iterinit
+loop do
+  key = src_db.iternext or break
+  periodic_log.periodically{ [key, store.db.rnum, src_db.rnum] }
+  next unless key =~ %r{http://tinyurl.com}
+  store.set(key){ src_db[key] }
 end
-store.close
+
+# store.db.iterinit
+# loop do
+#   key = store.db.iternext or break
+#   puts key
+# end
+# store.close
+
 
 # On a DB with 2.5M entries optimized for 39M entries, this loads about 250k/min
 #

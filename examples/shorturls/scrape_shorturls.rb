@@ -21,12 +21,16 @@ opts = Trollop::options do
   opt :from,            "Flat file of scrapes",                                                      :type => String
   opt :store_db,        "Tokyo cabinet db name",                                                     :type => String
   opt :create_db,       "Create Tokyo cabinet if --store-db doesn\'t exist?",                        :type => String, :default => false
+  opt :store_db_port,   "Tokyo tyrant db port",                                                      :type => String
   opt :skip,            "Initial requests to skip ahead",                                            :type => Integer
   opt :base_url,        "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
   opt :min_limit,       "Smallest sequential URL to randomly visit",                                 :type => Integer
   opt :max_limit,       "Largest sequential URL to randomly visit",                                  :type => Integer
   opt :encoding_radix,  "Modulo for turning int index into tinyurl string",                          :type => Integer
 end
+
+# ttserver -port 10002 rawd/shorturl_scrapes-twitter-20090 ; nohup ruby ./scrape_shorturls.rb --from=rawd/shorturl_requests-20090710.tsv --skip=553600 --store-db=rawd/shorturl_scrapes-db.tdb >> log/shorturl_requests-`datename`.log  &
+
 
 # Request stream
 if opts[:from]
