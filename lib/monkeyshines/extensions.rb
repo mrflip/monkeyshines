@@ -25,6 +25,11 @@ class UnionInterval
     self.min = [min, vals.to_a].flatten.compact.min
     self.max = [max, vals.to_a].flatten.compact.max
   end
+  def + min_max
+    sum_min = [min, min_max.to_a].flatten.compact.min
+    sum_max = [max, min_max.to_a].flatten.compact.max
+    UnionInterval.new sum_min, sum_max
+  end
   # returns span as an array:
   #   [min, max]
   def to_a
