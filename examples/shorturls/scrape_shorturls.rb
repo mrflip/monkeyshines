@@ -18,26 +18,30 @@ require 'trollop' # gem install trollop
 #
 #
 opts = Trollop::options do
-  opt :from,            "Flat file of scrapes",                                                      :type => String
-  opt :store_db,        "Tokyo cabinet db name",                                                     :type => String
-  opt :create_db,       "Create Tokyo cabinet if --store-db doesn\'t exist?",                        :type => String, :default => false
-  opt :store_db_port,   "Tokyo tyrant db port",                                                      :type => String
+  opt :from_type,    'Class name for scrape store to load from',  :type => String
+  opt :from,         'URI for scrape store to load from',  :type => String
   opt :skip,            "Initial requests to skip ahead",                                            :type => Integer
-  opt :base_url,        "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
-  opt :min_limit,       "Smallest sequential URL to randomly visit",                                 :type => Integer
-  opt :max_limit,       "Largest sequential URL to randomly visit",                                  :type => Integer
-  opt :encoding_radix,  "Modulo for turning int index into tinyurl string",                          :type => Integer
+
+  # opt :base_url,        "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
+  # opt :min_limit,       "Smallest sequential URL to randomly visit",                                 :type => Integer
+  # opt :max_limit,       "Largest sequential URL to randomly visit",                                  :type => Integer
+  # opt :encoding_radix,  "Modulo for turning int index into tinyurl string",                          :type => Integer
+
+  opt :log,          'File to store log', :type => String
 end
+Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
+Trollop::die :from_type unless opts[:from_type]
 
-# ttserver -port 10002 rawd/shorturl_scrapes-twitter-20090 ; nohup ruby ./scrape_shorturls.rb --from=rawd/shorturl_requests-20090710.tsv --skip=553600 --store-db=rawd/shorturl_scrapes-db.tdb >> log/shorturl_requests-`datename`.log  &
+# Load from store
+src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
+src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
 
-
-# Request stream
-if opts[:from]
-  request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
-elsif opts[:base_url]
-  request_stream =    RandomSequentialUrlRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
-else raise "Need either a --from flat file to read or a --base_url to draw requests from" end
+# # Request stream
+# if opts[:from]
+#   request_stream = Monkeyshines::FlatFileRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+# elsif opts[:base_url]
+#   request_stream =    RandomSequentialUrlRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
+# else raise "Need either a --from flat file to read or a --base_url to draw requests from" end
 
 # Scrape Store
 store   = Monkeyshines::ScrapeStore::ReadThruStore.new_from_command_line opts

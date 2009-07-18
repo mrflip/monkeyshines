@@ -26,10 +26,16 @@ module Monkeyshines
         end
       end
 
+      def each_as klass, &block
+        self.each do |key, hsh|
+          yield klass.from_hash hsh
+        end
+      end
+
       # Delegate to store
       def set(key, val)
         return unless val
-        db.put key, val.to_hash
+        db.put key, val.to_hash.compact
       end
       alias_method :save, :set
       def get(key)      db[key]  end

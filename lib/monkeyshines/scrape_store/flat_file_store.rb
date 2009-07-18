@@ -3,7 +3,7 @@ require 'fileutils'; include FileUtils
 module Monkeyshines
   module ScrapeStore
     #
-    class FlatFileStore
+    class FlatFileStore < ScrapeStore::Base
       attr_accessor :filename, :filemode
 
       #
@@ -15,37 +15,61 @@ module Monkeyshines
       end
 
       #
+      #
+      #
+      def each &block
+        file.each do |line|
+          attrs = line.chomp.split("\t")
+          next if attrs.blank?
+          yield *attrs
+        end
+      end
+
+      #
+      # Read ahead n_lines lines in the file
+      #
+      def skip! n_lines
+        Monkeyshines.logger.info "Skipping #{n_lines} in #{self.class}:#{filename}"
+        n_lines.times do
+          file.readline
+        end
+      end
+
+      #
       # Open the timestamped file,
       # ensuring its directory exists
       #
-      def dump_file
-        return @dump_file if @dump_file
-        mkdir!
+      def file
+        return @file if @file
         Monkeyshines.logger.info "Opening file #{filename} with mode #{filemode}"
-        @dump_file = File.open(filename, filemode)
+        @file = File.open(filename, filemode)
       end
+
       # Close the dump file
       def close!
-        @dump_file.close if @dump_file
-        @dump_file = nil
+        @file.close if @file
+        @file = nil
       end
-      # Ensure the dump_file's directory exists
+
+      # Ensure the file's directory exists
       def mkdir!
         dir = File.dirname(filename)
         return if File.directory?(dir)
         Monkeyshines.logger.info "Making directory #{dir}"
         FileUtils.mkdir_p dir
       end
+
+      # write to the file
+      def save obj
+        file << obj.to_flat.join("\t")+"\n"
+      end
+
       # delegates to +#save+ -- writes the object to the file
       def <<(obj)
         save obj
       end
-      # write to the dump_file
-      def save obj
-        dump_file << obj.to_flat.join("\t")+"\n"
-      end
-    end
 
+    end
   end
 end
 

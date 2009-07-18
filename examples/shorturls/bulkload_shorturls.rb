@@ -14,32 +14,30 @@ require 'shorturl_sequence'
 opts = Trollop::options do
   opt :from_type,    'Class name for scrape store to load from',  :type => String
   opt :from,         'URI for scrape store to load from',  :type => String
-  opt :into,         'Filename for flat TSV dump', :type => String
   opt :log,          'File to store log', :type => String
 end
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 Trollop::die :from_type unless opts[:from_type]
 
-# Load from store
+# Load from flat file
 src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
-src_store = src_store_klass.new(opts[:from])
-Monkeyshines.logger.info "Loaded store with #{src_store.size}"
+src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
 
-# Store into flat file
-dest_store      = Monkeyshines::ScrapeStore::FlatFileStore.new opts[:into], :filemode => 'w'
-# dest_store = Monkeyshines::ScrapeStore::TyrantTdbKeyStore.new
+# Store into read-thru cach
+TYRANT_PORTS = { 'tinyurl' => ":10001", 'bitly' => ":10002", 'other' => ":10003" }
+store = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(TYRANT_PORTS)
 
 # Log
-logger = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 100_000, :time_interval => 60)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10_000, :time_interval => 60) #
 
-# Store into flat dump file
-src_store.each do |key, hsh|
-  req = ShorturlRequest.from_hash hsh
-  dest_store.save req
-  logger.periodically{ req.to_flat }
+# Crossload from src_store into dest_store
+misses = 0
+src_store.each_as(ShorturlRequest) do |req|
+  periodic_log.periodically{ [ "%7d"%misses, 'misses', dests.map{|k,v| v.size }, req.to_flat[1..-1] ] }
+  store.set(req.url){ misses+=1 ; req }
 end
 
-# On a DB with 2.5M entries optimized for 39M entries, this loads about 250k/min
+# On a DB with 2M entries, this loads about 700/s
 #
 # You can optimize with something like
 #   store.db.optimize(2 * 39_000_000, -1, -1, TokyoCabinet::TDB::TLARGE)

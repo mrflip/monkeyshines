@@ -17,7 +17,11 @@ module Monkeyshines
       def set key, &block
         return if db.has_key?(key)
         result = block.call() or return
-        db.put(key, result.to_hash)
+        super(key, result)
+      end
+
+      def force_set key, val
+        super.set(key, result)
       end
 
     end

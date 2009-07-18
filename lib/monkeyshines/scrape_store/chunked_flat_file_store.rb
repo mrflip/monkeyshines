@@ -17,6 +17,7 @@ module Monkeyshines
           Monkeyshines.logger.info "Rotating chunked file #{filename} into #{new_filename}"
           self.close!
           @filename = new_filename
+          self.mkdir!
         end
       end
 

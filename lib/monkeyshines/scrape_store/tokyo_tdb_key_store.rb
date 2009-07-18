@@ -1,3 +1,4 @@
+require 'tokyocabinet'
 module Monkeyshines
   module ScrapeStore
     #
