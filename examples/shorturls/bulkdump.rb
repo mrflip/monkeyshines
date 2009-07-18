@@ -14,7 +14,7 @@ require 'shorturl_sequence'
 #
 #
 opts = Trollop::options do
-  opt :from,            "Flat file of scrapes",                                                      :type => String
+  opt :from,            "Flat file of scrapes",   :type => String
 end
 
 #

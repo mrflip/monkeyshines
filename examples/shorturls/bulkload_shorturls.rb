@@ -12,7 +12,7 @@ require 'tokyocabinet'
 
 opts = Trollop::options do
   opt :src_db,        "Tokyo cabinet db name",                            :type => String
-  opt :dest_db_port,  "Tokyo tyrant db port",                             :type => String
+  # opt :dest_db_port,  "Tokyo tyrant db port",                             :type => String
 end
 
 # 'shorturl_scrapes-twitter-20090711.tdb'
@@ -23,23 +23,28 @@ src_db = TokyoCabinet::TDB.new
 src_db.open(opts[:src_db], TokyoCabinet::TDB::OREADER)
 
 # Tokyo Tyrant: store
-Trollop::die :dest_db_port, "gives the tokyo cabinet db handle to store into" if opts[:dest_db_port].blank?
-store = Monkeyshines::ScrapeStore::ReadThruStore.new("", opts[:dest_db_port])
-Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
+stores = { }
+{
+  'tinyurl.com' => 10001,
+  'bit.ly'      => 10002,
+  'other'       => 10003
+}.each do |handle, port|
+  stores[handle] = Monkeyshines::ScrapeStore::ReadThruStore.new("", port)
+  Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless stores[handle].db
+end
+
 # Log every N requests
 periodic_log    = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000, :time_interval => 30)
-
-# [ 'tinyurl.com', 'bitly', 'other' ].each_with_index do
-
-
-
 
 src_db.iterinit
 loop do
   key = src_db.iternext or break
-  periodic_log.periodically{ [key, store.db.rnum, src_db.rnum] }
-  next unless key =~ %r{http://tinyurl.com}
-  store.set(key){ src_db[key] }
+  periodic_log.periodically{ [key, stores['tinyurl.com'].db.rnum, stores['bit.ly'].db.rnum, stores['other'].db.rnum, src_db.rnum] }
+  case
+  when (key =~ %r{^http://tinyurl.com/(.*)}) then stores['tinyurl.com'].set($1){  src_db[key] }
+  when (key =~ %r{^http://bitly/(.*)      }) then stores['bit.ly' ].set($1){      src_db[key] }
+  else                                            stores['other'  ].set(key){     src_db[key] }
+  end
 end
 
 # store.db.iterinit
