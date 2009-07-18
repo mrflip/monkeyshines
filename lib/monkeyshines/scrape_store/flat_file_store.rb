@@ -4,13 +4,14 @@ module Monkeyshines
   module ScrapeStore
     #
     class FlatFileStore
-      attr_accessor :filename
+      attr_accessor :filename, :filemode
 
       #
       # +filename_root+  : first part of name for files
       #
       def initialize filename, options={}
-        self.filename = filename
+        self.filename = filename or raise "Missing filename in #{self.class}"
+        self.filemode = options[:filemode] || 'a'
       end
 
       #
@@ -20,8 +21,8 @@ module Monkeyshines
       def dump_file
         return @dump_file if @dump_file
         mkdir!
-        Monkeyshines.logger.info "Opening file #{filename} for appending"
-        @dump_file = File.open(filename, "a")
+        Monkeyshines.logger.info "Opening file #{filename} with mode #{filemode}"
+        @dump_file = File.open(filename, filemode)
       end
       # Close the dump file
       def close!
@@ -35,13 +36,13 @@ module Monkeyshines
         Monkeyshines.logger.info "Making directory #{dir}"
         FileUtils.mkdir_p dir
       end
-      # write to the dump_file
+      # delegates to +#save+ -- writes the object to the file
       def <<(obj)
-        dump_file << obj.to_flat.join("\t")+"\n"
+        save obj
       end
-      # delegates to +<<()+ -- writes the object to the file
+      # write to the dump_file
       def save obj
-        self << obj
+        dump_file << obj.to_flat.join("\t")+"\n"
       end
     end
 
