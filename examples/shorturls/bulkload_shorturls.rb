@@ -1,59 +1,43 @@
 #!/usr/bin/env ruby
 require 'rubygems'
+require 'tokyocabinet' ; require 'tokyotyrant'
+require 'memcache'
+require 'trollop'
 $: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
 require 'wukong'
 require 'monkeyshines'
-require 'monkeyshines/scrape_store/read_thru_store'
-require 'monkeyshines/request_stream'
+require 'monkeyshines/monitor/periodic_monitor'
 require 'shorturl_request'
-require 'trollop' # gem install trollop
+require 'shorturl_sequence'
 
-require 'tokyocabinet'
-
+#
 opts = Trollop::options do
-  opt :src_db,        "Tokyo cabinet db name",                            :type => String
-  # opt :dest_db_port,  "Tokyo tyrant db port",                             :type => String
+  opt :from_type,    'Class name for scrape store to load from',  :type => String
+  opt :from,         'URI for scrape store to load from',  :type => String
+  opt :into,         'Filename for flat TSV dump', :type => String
+  opt :log,          'File to store log', :type => String
 end
+Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
+Trollop::die :from_type unless opts[:from_type]
 
-# 'shorturl_scrapes-twitter-20090711.tdb'
+# Load from store
+src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
+src_store = src_store_klass.new(opts[:from])
+Monkeyshines.logger.info "Loaded store with #{src_store.size}"
 
-# Tokyo cabinet
-Trollop::die :src_db, "gives the tokyo cabinet db handle to store into" if opts[:src_db].blank?
-src_db = TokyoCabinet::TDB.new
-src_db.open(opts[:src_db], TokyoCabinet::TDB::OREADER)
+# Store into flat file
+dest_store      = Monkeyshines::ScrapeStore::FlatFileStore.new opts[:into], :filemode => 'w'
+# dest_store = Monkeyshines::ScrapeStore::TyrantTdbKeyStore.new
 
-# Tokyo Tyrant: store
-stores = { }
-{
-  'tinyurl.com' => 10001,
-  'bit.ly'      => 10002,
-  'other'       => 10003
-}.each do |handle, port|
-  stores[handle] = Monkeyshines::ScrapeStore::ReadThruStore.new("", port)
-  Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless stores[handle].db
+# Log
+logger = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 100_000, :time_interval => 60)
+
+# Store into flat dump file
+src_store.each do |key, hsh|
+  req = ShorturlRequest.from_hash hsh
+  dest_store.save req
+  logger.periodically{ req.to_flat }
 end
-
-# Log every N requests
-periodic_log    = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000, :time_interval => 30)
-
-src_db.iterinit
-loop do
-  key = src_db.iternext or break
-  periodic_log.periodically{ [key, stores['tinyurl.com'].db.rnum, stores['bit.ly'].db.rnum, stores['other'].db.rnum, src_db.rnum] }
-  case
-  when (key =~ %r{^http://tinyurl.com/(.*)}) then stores['tinyurl.com'].set($1){  src_db[key] }
-  when (key =~ %r{^http://bitly/(.*)      }) then stores['bit.ly' ].set($1){      src_db[key] }
-  else                                            stores['other'  ].set(key){     src_db[key] }
-  end
-end
-
-# store.db.iterinit
-# loop do
-#   key = store.db.iternext or break
-#   puts key
-# end
-# store.close
-
 
 # On a DB with 2.5M entries optimized for 39M entries, this loads about 250k/min
 #

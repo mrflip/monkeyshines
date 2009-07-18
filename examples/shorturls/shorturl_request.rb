@@ -2,11 +2,11 @@ class ShorturlRequest < Struct.new(
     :url,
     :scraped_at,
     :response_code, :response_message,
-    :expanded_url
+    :contents
     )
-
   alias_method :short_url=, :url=
-
+  alias_method :expanded_url,  :contents
+  alias_method :expanded_url=, :contents=
   #
   # All we care about is the redirect destination.
   #

@@ -41,7 +41,7 @@ module ShorturlSequence
 end
 
 
-class SequentialUrlRequestStream < Monkeyshines::RequestStream
+class SequentialUrlRequestStream < Monkeyshines::RequestStream::Base
   attr_accessor :base_url, :request_pattern
   def initialize base_url,  request_pattern
     self.base_url        = base_url
@@ -52,7 +52,7 @@ class SequentialUrlRequestStream < Monkeyshines::RequestStream
   end
 end
 
-class RandomSequentialUrlRequestStream < Monkeyshines::RequestStream
+class RandomSequentialUrlRequestStream < Monkeyshines::RequestStream::Base
   attr_accessor :base_url, :max_limit, :min_limit, :encoding_radix
   def initialize base_url,  max_limit,  min_limit=0, encoding_radix=36, *args
     super *args
