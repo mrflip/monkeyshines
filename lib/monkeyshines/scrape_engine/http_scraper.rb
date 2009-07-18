@@ -83,7 +83,7 @@ module Monkeyshines
           response = perform_request(scrape_request.url)
           scrape_request.response = response
           backoff response
-        rescue Exception => e
+        rescue StandardError => e
           warn [e.to_s, scrape_request.to_s[0..2000].gsub(/[\n\r\t]+/, ' ')].join("\t")
           close # restart the connection
         end

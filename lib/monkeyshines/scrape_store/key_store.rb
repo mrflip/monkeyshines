@@ -39,7 +39,7 @@ module Monkeyshines
       #
       def self.new_from_command_line cmdline_opts, default_opts={}
         options = default_opts.merge(cmdline_opts)
-        store = self.new(options[:store_db], options[:create_db])
+        store = self.new(options[:store_db], options[:store_db_port])
         Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
         store
       end
