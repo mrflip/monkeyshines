@@ -11,14 +11,20 @@ class Monkeyshines::ScrapeStore::MultiplexShorturlCache < Monkeyshines::ScrapeSt
     end
   end
 
-  def set key, &block
+  def set key, *args, &block
     case
-    when (key =~ %r{^http://tinyurl.com/(.*)}) then dests['tinyurl'].set($1,  block)
-    when (key =~ %r{^http://bit.ly/(.*)})      then dests['bitly'  ].set($1,  block)
-    else                                            dests['other'  ].set(key, block)
+    when (key =~ %r{^http://tinyurl.com/(.*)}) then dests['tinyurl'].set($1,  *args, &block)
+    when (key =~ %r{^http://bit.ly/(.*)})      then dests['bitly'  ].set($1,  *args, &block)
+    else                                            dests['other'  ].set(key, *args, &block)
     end
   end
 
+  def size
+    dests.inject(0){|sum,hand_db| sz += hand_db[1].size }
+  end
+  def close
+    dests.each{|hdl,db| db.close }
+  end
 end
 
 

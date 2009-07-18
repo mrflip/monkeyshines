@@ -1,6 +1,3 @@
-#require "rufus/tokyo"
-#require "rufus/tokyo/cabinet/hash"
-require 'tokyocabinet'
 module Monkeyshines
   module ScrapeStore
     class ReadThruStore < Monkeyshines::ScrapeStore::TyrantTdbKeyStore
@@ -14,14 +11,10 @@ module Monkeyshines
       #     scraper.get url # will only be called if url isn't in rt_store
       #   end
       #
-      def set key, &block
-        return if db.has_key?(key)
+      def set key, force, &block
+        return if !force && db.has_key?(key)
         result = block.call() or return
         super(key, result)
-      end
-
-      def force_set key, val
-        super.set(key, result)
       end
 
     end

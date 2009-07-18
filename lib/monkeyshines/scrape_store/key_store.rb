@@ -1,6 +1,3 @@
-#require "rufus/tokyo"
-#require "rufus/tokyo/cabinet/hash"
-require 'tokyotyrant'
 module Monkeyshines
   module ScrapeStore
     class KeyStore < Monkeyshines::ScrapeStore::Base

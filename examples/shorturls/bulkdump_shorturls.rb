@@ -31,13 +31,13 @@ def make_store uri
   Monkeyshines::ScrapeStore::FlatFileStore.new "#{DUMPFILE_BASE+"-"+uri}.tsv", :filemode => 'w'
 end
 dests = { }
-[ 'tinyurl', # 'bitly', 'other'
+[ 'tinyurl', 'bitly', 'other'
 ].each do |handle|
   dests[handle] = make_store handle
 end
 
 # ******************** Log ********************
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 100, :time_interval => 15)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 20_000, :time_interval => 30)
 
 # ******************** Cross Load ********************
 # Read , process, dump

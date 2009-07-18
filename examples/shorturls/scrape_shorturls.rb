@@ -21,7 +21,7 @@ opts = Trollop::options do
   opt :from_type,    'Class name for scrape store to load from',  :type => String
   opt :from,         'URI for scrape store to load from',  :type => String
   opt :skip,            "Initial requests to skip ahead",                                            :type => Integer
-
+  opt :handle,   "Handle for scrape", :type => String
   # opt :base_url,        "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
   # opt :min_limit,       "Smallest sequential URL to randomly visit",                                 :type => Integer
   # opt :max_limit,       "Largest sequential URL to randomly visit",                                  :type => Integer
@@ -43,20 +43,26 @@ src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
 #   request_stream =    RandomSequentialUrlRequestStream.new_from_command_line(opts, :request_klass => ShorturlRequest)
 # else raise "Need either a --from flat file to read or a --base_url to draw requests from" end
 
-# Scrape Store
-store   = Monkeyshines::ScrapeStore::ReadThruStore.new_from_command_line opts
+# Store into read-thru cache
+TYRANT_PORTS = { 'tinyurl' => ":10001", 'bitly' => ":10002", 'other' => ":10003" }
+# store = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(TYRANT_PORTS)
+store = Monkeyshines::ScrapeStore::ReadThruStore.new(TYRANT_PORTS[opts[:handle]])
 
 # Scraper
 scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 
 # Log
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10, :starting_at => opts[:skip], :time_interval => 60)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1000, :starting_at => opts[:skip], :time_interval => 60)
 
 # Bulk load into read-thru cache.
 Monkeyshines.logger.info "Beginning scrape itself"
-request_stream.each do |scrape_request|
-  # next if scrape_request.url =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at)}
-  result = store.set( scrape_request.url ){ scraper.get(scrape_request) }
+misses = 0
+src_store.each_as(ShorturlRequest) do |scrape_request|
+  next if scrape_request.url =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at)}
+  result = store.set( scrape_request.url ) do
+    misses += 1
+    scraper.get(scrape_request)
+  end
   periodic_log.periodically{ [store.size, scrape_request.response_code, result, scrape_request.url] }
   sleep 0.1
 end

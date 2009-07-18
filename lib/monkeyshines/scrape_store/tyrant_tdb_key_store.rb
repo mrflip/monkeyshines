@@ -1,3 +1,4 @@
+require 'tokyotyrant'
 module Monkeyshines
   module ScrapeStore
 
