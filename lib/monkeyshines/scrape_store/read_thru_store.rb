@@ -3,7 +3,7 @@
 require 'tokyocabinet'
 module Monkeyshines
   module ScrapeStore
-    class ReadThruStore < Monkeyshines::ScrapeStore::KeyStore
+    class ReadThruStore < Monkeyshines::ScrapeStore::TyrantTdbKeyStore
 
       #
       # If key is absent, save the result of calling the block.

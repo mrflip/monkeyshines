@@ -7,12 +7,23 @@ module Monkeyshines
       # The actual backing store; should respond to #set and #get methods
       attr_accessor :db
 
-      # pass in the filename or URI of a tokyo cabinet table-style DB
-      # set create_db = true if you want to create a missing DB file
-      def initialize db_uri, port=1978, *args
-        super *args
-        self.db = TokyoTyrant::RDBTBL.new
-        db.open(db_uri||"", port) or raise("Can't open DB: #{db.ecode}: #{db.errmsg(db.ecode)}")
+      #
+      # Executes block once for each element in the whole DB, in whatever order
+      # the DB thinks you should see it.
+      #
+      # Your block will see |key, val|
+      #
+      # key_store.each do |key, val|
+      #   # ... stuff ...
+      # end
+      #
+      def each &block
+        db.iterinit
+        loop do
+          key = db.iternext or break
+          val = db[key]
+          yield key, val
+        end
       end
 
       # Delegate to store
@@ -26,21 +37,14 @@ module Monkeyshines
       def close()       db.close end
       def size()        db.size  end
 
-      def each &block
-        iter = db.iterinit
-        loop do
-          key = db.iternext or break
-          yield db[key]
-        end
-      end
-
       #
-      # Load standard command-line options
+      # Load from standard command-line options
+      #
+      # obvs only works when there's just one store
       #
       def self.new_from_command_line cmdline_opts, default_opts={}
         options = default_opts.merge(cmdline_opts)
-        store = self.new(options[:store_db], options[:store_db_port])
-        Trollop::die :store_db, "isn't a tokyo cabinet DB I could load" unless store.db
+        store = self.new(options[:store_db])
         store
       end
     end
