@@ -9,8 +9,11 @@ require 'monkeyshines'
 require 'monkeyshines/monitor/periodic_monitor'
 require 'shorturl_request'
 require 'shorturl_sequence'
+# On a DB with 2M entries, this loads about 700/s
+# You can optimize with something like
+#   store.db.optimize(2 * 39_000_000, -1, -1, TokyoCabinet::TDB::TLARGE)
 
-#
+# Command Line options
 opts = Trollop::options do
   opt :from_type,    'Class name for scrape store to load from',  :type => String
   opt :from,         'URI for scrape store to load from',  :type => String
@@ -30,6 +33,7 @@ store = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(TYRANT_PORTS)
 # Log
 periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10_000, :time_interval => 60) #
 
+
 # Crossload from src_store into dest_store
 misses = 0
 src_store.each_as(ShorturlRequest) do |req|
@@ -37,7 +41,3 @@ src_store.each_as(ShorturlRequest) do |req|
   store.set(req.url){ misses+=1 ; req }
 end
 
-# On a DB with 2M entries, this loads about 700/s
-#
-# You can optimize with something like
-#   store.db.optimize(2 * 39_000_000, -1, -1, TokyoCabinet::TDB::TLARGE)

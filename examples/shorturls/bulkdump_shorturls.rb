@@ -6,7 +6,7 @@ require 'wukong'
 require 'monkeyshines'
 require 'shorturl_request'
 require 'shorturl_sequence'
-require 'shorturl_scrubber'
+require 'monkeyshines/utils/uri'
 
 #
 # Command line options
@@ -31,7 +31,7 @@ def make_store uri
   Monkeyshines::ScrapeStore::FlatFileStore.new "#{DUMPFILE_BASE+"-"+uri}.tsv", :filemode => 'w'
 end
 dests = { }
-[ 'bitly', 'tinyurl', 'other'
+[ 'tinyurl', # 'bitly', 'other'
 ].each do |handle|
   dests[handle] = make_store handle
 end
@@ -41,6 +41,7 @@ periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 100, 
 
 # ******************** Cross Load ********************
 # Read , process, dump
+iter = 0
 src_store.each do |key, hsh|
   hsh['contents']             ||= hsh.delete 'expanded_url'
   hsh['response_code']          = nil if hsh['response_code']    == 'nil'
@@ -55,7 +56,7 @@ src_store.each do |key, hsh|
   req = ShorturlRequest.from_hash hsh
   periodic_log.periodically{ [src_store.size, req.to_flat] }
 
-  req.contents = ShorturlScrubber.scrub_url req.contents
+  req.contents = Addressable::URI.scrub_url req.contents if req.contents
 
   case
   when (key =~ %r{^http://tinyurl.com/(.*)}) then dests['tinyurl'].save req
