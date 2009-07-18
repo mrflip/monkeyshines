@@ -1,15 +1,15 @@
 #!/usr/bin/env ruby
-require 'rubygems'
-require 'tokyocabinet' ; require 'tokyotyrant'
-require 'memcache'
-require 'trollop'
 $: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
+require 'rubygems'
+require 'trollop'
 require 'wukong'
 require 'monkeyshines'
-require 'monkeyshines/monitor/periodic_monitor'
 require 'shorturl_request'
 require 'shorturl_sequence'
+require 'shorturl_scrubber'
 
+#
+# Command line options
 #
 opts = Trollop::options do
   opt :from_type,    'Class name for scrape store to load from',  :type => String
@@ -26,20 +26,18 @@ src_store = src_store_klass.new(opts[:from])
 Monkeyshines.logger.info "Loaded store with #{src_store.size}"
 
 # ******************** Write into ********************
-# TYRANT_PORTS = { 'tinyurl.com' => 10001, 'bit.ly' => 10002, 'other' => 10003 }
 DUMPFILE_BASE = opts[:into]
 def make_store uri
-  # Monkeyshines::ScrapeStore::TyrantTdbKeyStore.new uri
   Monkeyshines::ScrapeStore::FlatFileStore.new "#{DUMPFILE_BASE+"-"+uri}.tsv", :filemode => 'w'
 end
 dests = { }
-[ 'bitly' # , 'tinyurl', 'other'
+[ 'bitly', 'tinyurl', 'other'
 ].each do |handle|
   dests[handle] = make_store handle
 end
 
 # ******************** Log ********************
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 100_000, :time_interval => 15)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 100, :time_interval => 15)
 
 # ******************** Cross Load ********************
 # Read , process, dump
@@ -56,12 +54,13 @@ src_store.each do |key, hsh|
   hsh['url']                  ||= hsh.delete 'short_url'
   req = ShorturlRequest.from_hash hsh
   periodic_log.periodically{ [src_store.size, req.to_flat] }
-  # periodic_log.periodically{ [key, dests['tinyurl.com'].db.rnum, dests['bit.ly'].db.rnum, dests['other'].db.rnum, src_db.rnum] }
+
+  req.contents = ShorturlScrubber.scrub_url req.contents
 
   case
-  when (key =~ %r{^http://tinyurl.com/(.*)}) then dests['tinyurl'].save req # .set($1 ){ req }
-  when (key =~ %r{^http://bit.ly/(.*)})      then dests['bitly'  ].save req # .set($1 ){ req }
-  else                                            dests['other'  ].save req # .set(key){ req }
+  when (key =~ %r{^http://tinyurl.com/(.*)}) then dests['tinyurl'].save req
+  when (key =~ %r{^http://bit.ly/(.*)})      then dests['bitly'  ].save req
+  else                                            dests['other'  ].save req
   end
   # src_store.save(key, req.to_hash.compact)
 end
