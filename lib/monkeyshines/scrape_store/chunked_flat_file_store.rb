@@ -8,6 +8,7 @@ module Monkeyshines
         self.chunk_monitor    = Monkeyshines::Monitor::PeriodicMonitor.new(:time_interval => time_interval)
         self.filename_pattern = filename_pattern
         super filename_pattern.make(), *args
+        self.mkdir!
       end
 
       def save *args

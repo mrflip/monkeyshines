@@ -7,61 +7,50 @@ require 'monkeyshines'
 require 'shorturl_request'
 require 'shorturl_sequence'
 require 'monkeyshines/utils/uri'
+require 'time'
+
+# require 'ruby-prof'
+
 
 #
 # Command line options
 #
 opts = Trollop::options do
-  opt :from_type,    'Class name for scrape store to load from',  :type => String
-  opt :from,         'URI for scrape store to load from',  :type => String
-  opt :into,         'Filename for flat TSV dump', :type => String
+  # opt :from_type,    'Class name for scrape store to load from',  :type => String
+  # opt :from,         'URI for scrape store to load from',  :type => String
+  opt :handle,       "Handle for scrape", :type => String
+  # opt :into,         'Filename for flat TSV dump', :type => String
   opt :log,          'File to store log', :type => String
-end
-Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
-Trollop::die :from_type unless opts[:from_type]
-
-# ******************** Read From ********************
-src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
-src_store = src_store_klass.new(opts[:from])
-Monkeyshines.logger.info "Loaded store with #{src_store.size}"
-
-# ******************** Write into ********************
-DUMPFILE_BASE = opts[:into]
-def make_store uri
-  Monkeyshines::ScrapeStore::FlatFileStore.new "#{DUMPFILE_BASE+"-"+uri}.tsv", :filemode => 'w'
-end
-dests = { }
-[ 'tinyurl', 'bitly', 'other'
-].each do |handle|
-  dests[handle] = make_store handle
 end
 
 # ******************** Log ********************
+Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 20_000, :time_interval => 30)
 
-# ******************** Cross Load ********************
-# Read , process, dump
-iter = 0
+# ******************** Read From ********************
+TYRANT_PORTS = { 'tinyurl' => ":10001", 'bitly' => ":10002", 'other' => ":10003" }
+src_uri = TYRANT_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
+src_store = Monkeyshines::ScrapeStore::TyrantTdbKeyStore.new(src_uri)
+Monkeyshines.logger.info "Loaded store with #{src_store.size}"
+
+# ******************** Write into ********************
+# dest_store = Monkeyshines::ScrapeStore::FlatFileStore.new(opts[:into], opts.reverse_merge(:filemode => 'w'))
+HDB_PORTS = { 'tinyurl' => ":10042", 'bitly' => ":10043", 'other' => ":10044" }
+dest_uri = HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
+dest_store = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(dest_uri)
+# src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
+# src_store = src_store_klass.new(opts[:from])
+Monkeyshines.logger.info "Loading into store with #{dest_store.size}"
+
+# RubyProf.start
+
+# ******************** Dump ********************
 src_store.each do |key, hsh|
-  hsh['contents']             ||= hsh.delete 'expanded_url'
-  hsh['response_code']          = nil if hsh['response_code']    == 'nil'
-  hsh['contents']               = nil if hsh['contents']         == 'nil'
-  unless hsh['contents'] || hsh['response_code']
-    # Monkeyshines.logger.info "removing #{hsh.inspect}"
-    src_store.db.out(key)
-    next
-  end
-  hsh['response_message']       = nil if hsh['response_message'] == 'nil'
-  hsh['url']                  ||= hsh.delete 'short_url'
-  req = ShorturlRequest.from_hash hsh
-  periodic_log.periodically{ [src_store.size, req.to_flat] }
-
-  req.contents = Addressable::URI.scrub_url req.contents if req.contents
-
-  case
-  when (key =~ %r{^http://tinyurl.com/(.*)}) then dests['tinyurl'].save req
-  when (key =~ %r{^http://bit.ly/(.*)})      then dests['bitly'  ].save req
-  else                                            dests['other'  ].save req
-  end
-  # src_store.save(key, req.to_hash.compact)
+  periodic_log.periodically{ [src_store.size, dest_store.size, hsh.values_of('url', 'scraped_at', 'response_code', 'response_message', 'contents')] }
+  dest_store.save hsh['url'], hsh['scraped_at']
 end
+
+# result = RubyProf.stop
+# # Print a flat profile to text
+# printer = RubyProf::FlatPrinter.new(result)
+# printer.print(STDOUT, 0)

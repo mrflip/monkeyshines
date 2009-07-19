@@ -23,17 +23,13 @@ module Monkeyshines
         end
       end
 
-      def each_as klass, &block
-        self.each do |key, hsh|
-          yield klass.from_hash hsh
-        end
-      end
 
-      # Delegate to store
+      # Save the value into the database
       def set(key, val)
         return unless val
-        db.put key, val.to_hash.compact
+        db[key] = val
       end
+
       alias_method :save, :set
       def get(key)      db[key]  end
       def [](key)       db[key]  end

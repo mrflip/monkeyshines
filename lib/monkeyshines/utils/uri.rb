@@ -49,6 +49,14 @@ module Addressable
     end
 
     #
+    # The md5hash of this URI
+    #
+    # make sure to require 'digest/md5' somewhere...
+    def md5hash
+      Digest::MD5.hexdigest(self.normalize.to_s)
+    end
+
+    #
     # +uuid+  -- RFC-4122 ver.5 uuid; guaranteed to be universally unique
     #
     # See http://www.faqs.org/rfcs/rfc4122.html

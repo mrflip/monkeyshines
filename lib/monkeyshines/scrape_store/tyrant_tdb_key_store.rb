@@ -17,6 +17,17 @@ module Monkeyshines
         super *args
       end
 
+      def each_as klass, &block
+        self.each do |key, hsh|
+          yield klass.from_hash hsh
+        end
+      end
+      # Delegate to store
+      def set(key, val)
+        return unless val
+        db.put key, val.to_hash.compact
+      end
+
       def size()        db.rnum  end
 
     end #class
