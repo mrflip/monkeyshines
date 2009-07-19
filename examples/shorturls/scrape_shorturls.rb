@@ -20,20 +20,21 @@ require 'trollop' # gem install trollop
 #
 #
 opts = Trollop::options do
-  opt :dumpfile_dir,        "Filename base to store output. e.g. --dump_basename=/data/ripd",        :type => String
-  opt :dumpfile_pattern,    "Pattern for dump file output",                     :default => ":dumpfile_dir/:handle_prefix/:handle/:date/:handle+:datetime-:pid.tsv"
-  opt :dumpfile_chunk_time, "Frequency to rotate chunk files (in seconds)",     :default => 60*60*4, :type => Integer
-  opt :from_type,    'Class name for scrape store to load from',  :type => String
-  opt :from,         'URI for scrape store to load from',  :type => String
-  opt :skip,            "Initial requests to skip ahead",                                            :type => Integer
-  opt :handle,       "Handle for scrape", :type => String
+  opt :dumpfile_dir,        "Filename base to store output. e.g. --dump_basename=/data/ripd",            :type => String
+  opt :dumpfile_pattern,    "Pattern for dump file output",                 :default => ":dumpfile_dir/:handle_prefix/:handle/:date/:handle+:datetime-:pid.tsv"
+  opt :dumpfile_chunk_time, "Frequency to rotate chunk files (in seconds)", :default => 60*60*4,         :type => Integer
+  opt :from_type,           "Class name for scrape store to load from",                                  :type => String
+  opt :from,                "URI for scrape store to load from",                                         :type => String
+  opt :skip,                "Initial requests to skip ahead",                                            :type => Integer
+  opt :handle,              "Handle for scrape",                                                         :type => String
+  opt :dest_uri,            "URI for cache server",                                                      :type => String
   #
-  # opt :base_url,        "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
-  # opt :min_limit,       "Smallest sequential URL to randomly visit",                                 :type => Integer
-  # opt :max_limit,       "Largest sequential URL to randomly visit",                                  :type => Integer
-  # opt :encoding_radix,  "Modulo for turning int index into tinyurl string",                          :type => Integer
+  # opt :base_url,          "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
+  # opt :min_limit,         "Smallest sequential URL to randomly visit",                                 :type => Integer
+  # opt :max_limit,         "Largest sequential URL to randomly visit",                                  :type => Integer
+  # opt :encoding_radix,    "Modulo for turning int index into tinyurl string",                          :type => Integer
   #
-  opt :log,          'File to store log', :type => String
+  opt :log,                 "File to store log",                                                         :type => String
 end
 
 # ******************** Log ********************
@@ -46,7 +47,7 @@ src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
 
 # ******************** Track visited URLs with hash
 HDB_PORTS = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
-dest_uri = HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
+dest_uri = opts[:dest_uri] || HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
 dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(dest_uri)
 # dest_cache = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(HDB_PORTS)
 
