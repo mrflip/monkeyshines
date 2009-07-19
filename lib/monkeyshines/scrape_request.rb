@@ -15,8 +15,6 @@ module Monkeyshines
       )
     def response= response
       return unless response
-      self.response_code    = response.code
-      self.response_message = response.message[0..200].gsub(/[\n\r\t]+/, ' ')
       self.contents         = response.body
     end
 

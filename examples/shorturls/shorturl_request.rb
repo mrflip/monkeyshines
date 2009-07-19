@@ -4,14 +4,14 @@ class ShorturlRequest < Struct.new(
     :response_code, :response_message,
     :contents
     )
-  alias_method :short_url=, :url=
-  alias_method :expanded_url,  :contents
+  alias_method :short_url=,    :url=
   alias_method :expanded_url=, :contents=
+  alias_method :expanded_url,  :contents
   #
   # All we care about is the redirect destination.
   #
   def response= response
-    self.expanded_url = response["location"]
+    self.contents  = response["location"]
   end
 
   #

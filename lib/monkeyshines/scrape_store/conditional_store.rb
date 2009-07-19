@@ -35,8 +35,11 @@ module Monkeyshines
         self.misses += 1                 # track the cache miss
       end
 
-      def size
-        cache.size
+      def size() cache.size  end
+
+      def close()
+        cache.close
+        store.close
       end
     end
   end

@@ -46,7 +46,7 @@ module Monkeyshines
       end
 
       # Close the dump file
-      def close!
+      def close
         @file.close if @file
         @file = nil
       end
