@@ -81,7 +81,9 @@ module Monkeyshines
       def get scrape_request
         begin
           response = perform_request(scrape_request.url)
-          scrape_request.response = response
+          scrape_request.response_code    = response.response_code
+          scrape_request.response_message = response.message[0..200].gsub(/[\n\r\t]+/, ' ')
+          scrape_request.response         = response
           backoff response
         rescue StandardError => e
           warn [e.to_s, scrape_request.to_s[0..2000].gsub(/[\n\r\t]+/, ' ')].join("\t")

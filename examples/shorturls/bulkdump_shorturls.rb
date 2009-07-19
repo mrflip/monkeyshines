@@ -9,9 +9,6 @@ require 'shorturl_sequence'
 require 'monkeyshines/utils/uri'
 require 'time'
 
-# require 'ruby-prof'
-
-
 #
 # Command line options
 #
@@ -42,15 +39,8 @@ dest_store = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(dest_uri)
 # src_store = src_store_klass.new(opts[:from])
 Monkeyshines.logger.info "Loading into store with #{dest_store.size}"
 
-# RubyProf.start
-
 # ******************** Dump ********************
 src_store.each do |key, hsh|
   periodic_log.periodically{ [src_store.size, dest_store.size, hsh.values_of('url', 'scraped_at', 'response_code', 'response_message', 'contents')] }
   dest_store.save hsh['url'], hsh['scraped_at']
 end
-
-# result = RubyProf.stop
-# # Print a flat profile to text
-# printer = RubyProf::FlatPrinter.new(result)
-# printer.print(STDOUT, 0)
