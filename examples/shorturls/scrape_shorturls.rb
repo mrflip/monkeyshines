@@ -44,6 +44,7 @@ periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1000,
 # ******************** Load from store ********************
 src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
 src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
+src_store.skip!(opts[:skip].to_i) if opts[:skip]
 
 # ******************** Track visited URLs with hash
 HDB_PORTS = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
@@ -71,7 +72,7 @@ scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 # Bulk load into read-thru cache.
 Monkeyshines.logger.info "Beginning scrape itself"
 src_store.each do |bareurl, *args|
-  next if bareurl =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at)}
+  next if bareurl =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at|bkite.com)}
   #
   req    = ShorturlRequest.new(bareurl, *args)
   result = dest_store.set( req.url ) do
