@@ -64,6 +64,10 @@ dest_store = Monkeyshines::ScrapeStore::ConditionalStore.new(dest_cache, dumpfil
 # ******************** Scraper ********************
 scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 
+
+# require 'ruby-prof'
+# RubyProf.start
+
 # Bulk load into read-thru cache.
 Monkeyshines.logger.info "Beginning scrape itself"
 src_store.each do |bareurl, *args|
@@ -76,5 +80,11 @@ src_store.each do |bareurl, *args|
   end
   periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
 end
+
+# result = RubyProf.stop
+# # Print a flat profile to text
+# printer = RubyProf::FlatPrinter.new(result)
+# printer.print(STDERR, 0)
+
 dest_store.close
-scraper.finish
+scraper.close
