@@ -32,7 +32,7 @@ module Monkeyshines
         return unless cache_val
         cache.set_nr key, cache_val # update cache
         store << store_val          # save value
-        self.misses += 1                 # track the cache miss
+        self.misses += 1            # track the cache miss
       end
 
       def size() cache.size  end

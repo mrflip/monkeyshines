@@ -75,7 +75,8 @@ src_store.each do |bareurl, *args|
   #
   req    = ShorturlRequest.new(bareurl, *args)
   result = dest_store.set( req.url ) do
-    response = scraper.get(req)      # do the url fetc
+    response = scraper.get(req)      # do the url fetch
+    next unless response.response_code || response.contents
     [response.scraped_at, response]  # timestamp into cache, result into flat file
   end
   periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
