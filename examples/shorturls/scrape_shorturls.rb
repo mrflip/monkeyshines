@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
-require 'rubygems'
 $: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
+require 'rubygems'
 require 'wukong'
 require 'monkeyshines'
+#
 require 'shorturl_request'
 require 'shorturl_sequence'
 require 'monkeyshines/utils/uri'
@@ -11,82 +12,95 @@ require 'monkeyshines/scrape_store/conditional_store'
 require 'monkeyshines/scrape_engine/http_head_scraper'
 require 'trollop' # gem install trollop
 
+# ===========================================================================
 #
-# Example usage:
+# scrape_shorturls.rb --
 #
-#    nohup ./scrape_shorturls.rb --base-url='http://tinyurl.com/' --encoding_radix=36 \
-#      --create-db=true --store-db rawd/shorturl_scrapes-sequential-`datename`.tdb
-#      --max-limit=1200000000 --min-limit=200000000  >> log/shorturl_scrapes-sequential-`datename`.log &
+# To scrape from a list of shortened urls:
+#
+#    ./shorturl_random_scrape.rb --from-type=FlatFileStore --from=request_urls.tsv
+#
+# To do a random scrape:
+#
+#    ./shorturl_random_scrape.rb --from-type=RandomUrlStream --base-url=tinyurl.com
+#       --base-url="http://tinyurl.com" --min-limit= --max-limit= --encoding_radix=
 #
 #
 opts = Trollop::options do
-  opt :dumpfile_dir,        "Filename base to store output. e.g. --dump_basename=/data/ripd",            :type => String
-  opt :dumpfile_pattern,    "Pattern for dump file output",                 :default => ":dumpfile_dir/:handle_prefix/:handle/:date/:handle+:datetime-:pid.tsv"
-  opt :dumpfile_chunk_time, "Frequency to rotate chunk files (in seconds)", :default => 60*60*4,         :type => Integer
-  opt :from_type,           "Class name for scrape store to load from",                                  :type => String
-  opt :from,                "URI for scrape store to load from",                                         :type => String
-  opt :skip,                "Initial requests to skip ahead",                                            :type => Integer
-  opt :handle,              "Handle for scrape",                                                         :type => String
-  opt :dest_uri,            "URI for cache server",                                                      :type => String
-  #
-  # opt :base_url,          "First part of URL incl. scheme and trailing slash, eg http://tinyurl.com/", :type => String
-  # opt :min_limit,         "Smallest sequential URL to randomly visit",                                 :type => Integer
-  # opt :max_limit,         "Largest sequential URL to randomly visit",                                  :type => Integer
-  # opt :encoding_radix,    "Modulo for turning int index into tinyurl string",                          :type => Integer
-  #
-  opt :log,                 "File to store log",                                                         :type => String
+  opt :base_url,       "Host part of URL: eg tinyurl.com",             :type => String
+  opt :log,            "Log file name; leave blank to use STDERR",     :type => String
+  # input from file
+  opt :from_type,      "Class name for scrape store to load from",     :type => String
+  opt :from,           "URI for scrape store to load from",            :type => String
+  # OR do a random walk
+  opt :min_limit,      "Smallest sequential URL to randomly visit",    :type => Integer
+  opt :max_limit,      "Largest sequential URL to randomly visit",     :type => Integer
+  opt :encoding_radix, "36 for most, 62 if URLs are case-sensitive",   :type => Integer
+  # output storage
+  opt :cache_loc,      "URI for cache server",                         :type => String
+  opt :chunk_time,     "Frequency to rotate chunk files (in seconds)", :type => Integer, :default => 60*60*4
+  opt :dest_dir,       "Filename base to store output. e.g. --dump_basename=/data/ripd", :type => String
+  opt :dest_pattern,   "Pattern for dump file output",                 :default => ":dest_dir/:handle_prefix/:handle/:date/:handle+:datetime-:pid.tsv"
 end
-
 # ******************** Log ********************
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1000, :time_interval => 30)
 
-# ******************** Load from store ********************
-src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
-src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
+#
+# ******************** Load from store or random walk ********************
+#
+src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type]) or raise "Can't load #{opts[:from_type]}. Try --from-type=RandomUrlStream or --from-type=FlatFileStore"
+src_store = src_store_klass.new_from_command_line(opts, :filemode => 'r')
 src_store.skip!(opts[:skip].to_i) if opts[:skip]
 
-# ******************** Track visited URLs with hash
-HDB_PORTS = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
-dest_uri = opts[:dest_uri] || HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
-dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(dest_uri)
+#
+# ******************** Store output ********************
+#
+# Track visited URLs with key-value database
+#
+handle = opts[:]
+HDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
+cache_loc  = opts[:cache_loc] || HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other)."
+dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(cache_loc)
 # dest_cache = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(HDB_PORTS)
 
-# ******************** Write into ********************
-# Scrape Store for completed requests
-dumpfile_pattern  = Monkeyshines::Utils::FilenamePattern.new(opts[:dumpfile_pattern],
-  :handle => 'shorturl-'+opts[:handle], :dumpfile_dir => opts[:dumpfile_dir])
-dumpfile          = Monkeyshines::ScrapeStore::ChunkedFlatFileStore.new(dumpfile_pattern,
-  opts[:dumpfile_chunk_time].to_i, opts.merge(:filemode => 'w'))
+#
+# Store the data into flat files
+#
+dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern],
+  :handle => 'shorturl-'+opts[:handle], :dest_dir => opts[:dest_dir])
+dest_files   = Monkeyshines::ScrapeStore::ChunkedFlatFileStore.new(dest_pattern,
+  opts[:dest_chunk_time].to_i, opts)
 
-# ******************** Conditional Store ********************
-dest_store = Monkeyshines::ScrapeStore::ConditionalStore.new(dest_cache, dumpfile)
+#
+# Conditional store uses the key-value DB to boss around the flat files --
+# requests are only made (and thus data is only output) if the url is missing
+# from the key-value store.
+#
+dest_store = Monkeyshines::ScrapeStore::ConditionalStore.new(dest_cache, dest_files)
 
+#
 # ******************** Scraper ********************
+#
 scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
 
-
-# require 'ruby-prof'
-# RubyProf.start
-
-# Bulk load into read-thru cache.
+#
+# ******************** Do this thing ********************
+#
 Monkeyshines.logger.info "Beginning scrape itself"
 src_store.each do |bareurl, *args|
+  # prepare the request
   next if bareurl =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at|bkite.com)}
-  #
-  req    = ShorturlRequest.new(bareurl, *args)
+  req = ShorturlRequest.new(bareurl, *args)
+
+  # conditional store only calls scraper if url key is missing.
   result = dest_store.set( req.url ) do
-    response = scraper.get(req)      # do the url fetch
-    next unless response.response_code || response.contents
-    [response.scraped_at, response]  # timestamp into cache, result into flat file
+    response = scraper.get(req)                             # do the url fetch
+    next unless response.response_code || response.contents # don't store bad fetches
+    [response.scraped_at, response]                         # timestamp into cache, result into flat file
   end
+
   periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
 end
-
-# result = RubyProf.stop
-# # Print a flat profile to text
-# printer = RubyProf::FlatPrinter.new(result)
-# printer.print(STDERR, 0)
-
 dest_store.close
 scraper.close

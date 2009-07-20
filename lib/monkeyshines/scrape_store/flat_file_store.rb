@@ -69,6 +69,16 @@ module Monkeyshines
         save obj
       end
 
+      #
+      # take a hash of options:
+      #
+      #   --from
+      #   --filemode
+      #
+      def self.new_from_command_line cmdline_opts, default_opts={}
+        options = default_opts.merge(cmdline_opts)
+        self.new options[:from], options
+      end
     end
   end
 end
