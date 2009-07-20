@@ -32,6 +32,7 @@ opts = Trollop::options do
   # input from file
   opt :from_type,      "Class name for scrape store to load from",     :type => String
   opt :from,           "URI for scrape store to load from",            :type => String
+  opt :skip,           "Initial lines to skip",                        :type => Integer
   # OR do a random walk
   opt :min_limit,      "Smallest sequential URL to randomly visit",    :type => Integer
   opt :max_limit,      "Largest sequential URL to randomly visit",     :type => Integer
