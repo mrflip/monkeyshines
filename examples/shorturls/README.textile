@@ -1,17 +1,111 @@
+This is a demonstration script showing how to inhale translations from URL shorteners such as http://tinyurl.com/ or http://bit.ly/. It tries to do so as efficiently as possible, using persistent HTTP connections for reduced load and a centralized request cache to reduce unnecessary requests.
 
+You can feed it a sequential list of urls or have it wander within a range of request strings.
 
+h2. Setup
 
-* Archive Team effort to scrape: 
+You will need:
 
----
+* "Wukong":http://mrflip.com mostly for several utility methods, though by the time you have a few ten million urls to process you may find it handy.
 
-* http://joshua.schachter.org/2009/04/on-url-shorteners.html
-* http://snook.ca/archives/php/url-shortener/
-* http://simonwillison.net/2009/Apr/11/revcanonical/
+* "Tokyo Tyrant":tokyocabinet.sourceforge.net/ or other key-value database to track which URLs have been visited.  TokyoTyrant's speed and network interface let you efficiently run many scrapers off the same central DB.
 
+If you're using tokyo tyrant, you should consider optimizing the database:
 
---
+    tcrmgr optimize -port 10042 localhost 'bnum=20000000#opts=l' 
 
-Base 62 encoding:
-* http://refactormycode.com/codes/125-base-62-encoding
-* http://github.com/jtzemp/base62/tree/master
+will pre-allocate 20 million buckets and a 64-bit index. (You want at least twice as many buckets as entries).
+
+h2. Running
+
+*Source of URLs to scrape*:
+
+_URLs taken from input files_:
+
+* --from-type=FlatFileStore if you want to load from a flat file stream.
+* --from should give the path to the input file: one url per line, as many as you care to supply.  
+
+*OR*
+
+_URLs randomly generated in a range_:
+
+* --from-type=RandomUrlStream if you want to use the 
+* --base-url: the domain to scrape (required). 
+* --min-limit and --max-limit give a numeric range (normal base-10 number) to explore.
+* --encoding-radix: Most shorteners use base-36: the characters 0-9 and a-z are used in ascending order. Some, such as bit.ly, use base-62 (0-9a-zA-Z) by being case-sensitive: http://bit.ly/ANVgN and http://bit.ly/anvgN are different. Specify --encoding-radix=36 if the shortener ignores case, or --encoding-radix=62 if it is case sensitive. If the base-url is either bit.ly or tinyurl.com you can omit this parameter.
+
+*Output files*:
+
+* --dumpfile-chunk-time: How often to rotate output files.
+* --dumpfile-dir:        Base part of the output filename.
+* --dumpfile-pattern:    Pattern for dumpfile names. Defaults to
+  @ :dumpfile_dir/:handle_prefix/:handle/:date/:handle+:datetime-:pid.tsv @
+With --dumpfile-dir=/data/ripd --handle=bitly and the default dumpfile-pattern, the scraper will store into files named
+  /data/ripd/shortu/shorturl-bitly/20090708/shorturl-bitly+20090708123456-8342.tsv
+This may seem insane but when you've had multiple scrapers running for two months you'll thank me.
+* --cache-loc hostname:port for the requested cache. This should be a tokyo tyrant server, though it should be easy to swap it out for another distributed key-value store.
+
+*Other*:
+
+* --log: optional log file; otherwise outputs progress to the console
+
+h2. Output Files:
+
+As written, the scraper uses the cache database as only a visited-yet? flag (storing the scraped_at timestamp but nothing else.)  The actual scrape data is stored in flat files.  If you want to store everything in the database, swap out the ConditionalStore for a ReadThruStore.
+
+h3. Output file format
+
+The output is stored in a series of files with tab-separated rows. Each row holds information about one url:
+
+  @
+  class_name (ignore)	url             	date     	code#	resp msg        destination url
+  shorturl_request	http://bit.ly/wukong	20090720003304  301     Moved   http://github.com/mrflip/wukong
+  @
+
+In order:
+* a dummy field giving the class name.
+* the requested URL
+* the date, stored as YYYYmmddHHMMSS
+* response_code: the "HTTP status code,":http://en.wikipedia.org/wiki/List_of_HTTP_status_codes see below for explanation. (BTW - why has nobody released a parody of "I've got hos in area codes":http://en.wikipedia.org/wiki/Area_Codes_(song) using HTTP status codes? You have disappointed me, internet.) 
+* response_message: the message accompanying that response code.
+* contents: the redirect URL, or nothing if none was returned.
+
+h3. File Chunking
+
+Every four hours (or according to the --chunk-time parameter) the scraper will close the current dump file and open a new, timestamped one following the same pattern. This mitigates the damage from a corrupted file and lets you migrate the output products to S3 or other offline storage.  Make sure you include a :datetime somewhere in the filename, and at least one of :hostname or :pid if you have multiple scraper robots at work.
+
+h2. Scraper
+
+* Does a HEAD only -- the scraper doesn't request the contents of the page, only the redirect header.
+* Persistent connections -- opens one connection and 
+* Backoff -- if it receives server error response codes the scraper will sleep for several seconds before attempting the next request.
+
+h2. Response codes:
+
+* 301 Moved              - the traditional status code for a redirect to the expanded url
+* 301 Moved Permanently  - this is used interchangeably by bit.ly, no idea why
+* 302 Found              - bit.ly uses this for links marked as spam -- they land you on an 'are you sure?' page on bit.ly's servers.
+* 302 Moved Temporarily  - ??? don't know the diff between _302 Moved Temporarily_ and _307 Temporary Redirect_ in theory or practice.
+* 307 Temporary Redirect - Used by some shorteners, such as budurl.com, that let you change a URL after the fact.
+Additionally, these non-redirect urls are meaningful:
+* 200 OK                 - used by tinyurl.com to indicate a nonexistent tinyurl.
+* 200 Apple              - no, really. Returned by ad.vu which does an OK and then a meta refresh. (Assumedly so they get a pageview on their ad network)
+* 404 Not Found          - For bit.ly, a removed or non-existent url string. For tinyurl, an ill-formed url string, like 22vcnf?ic or 22lsj4...some (well-formed but missing ones get a 200 OK). 
+
+h2. Seed data
+
+To prevent unnecessary load on the shorteners' service, you can download several million URL expansions from infochimps.org. Feel free to contribute your efforts there as well.
+
+You will want to use the @bulkload_shorturls.rb@ script to fill the request sentinel cache.
+
+h2. See Also:
+
+* *On URL Shorteners*:
+** http://joshua.schachter.org/2009/04/on-url-shorteners.html
+** http://snook.ca/archives/php/url-shortener/
+** http://simonwillison.net/2009/Apr/11/revcanonical/
+* *Archive Team effort to scrape*: 
+** http://archiveteam.org/index.php?title=TinyURL
+* *Base 62 encoding*:
+** http://refactormycode.com/codes/125-base-62-encoding
+** http://github.com/jtzemp/base62/tree/master
