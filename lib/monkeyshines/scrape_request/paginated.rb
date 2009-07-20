@@ -57,6 +57,7 @@ module Monkeyshines
         (response && response.healthy? && (response.num_items < items_per_page)) )
     end
 
+    #
     # Soft limit on the number of pages to scrape.
     #
     # Typically, leave this set to the hard_request_limit if you don't know
@@ -99,6 +100,14 @@ module Monkeyshines
         include Monkeyshines::Paginated
       end
     end
+
+    # #
+    # # Threshold count-per-page and actual count to get number of expected pages.
+    # # Cap the request with max
+    # def pages_from_count per_page, count, max=nil
+    #   num = [ (count.to_f / per_page.to_f).ceil, 0 ].max
+    #   [num, max].compact.min
+    # end
   end
 
   #

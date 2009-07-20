@@ -8,7 +8,7 @@ You will need:
 
 * "Wukong":http://mrflip.com mostly for several utility methods, though by the time you have a few ten million urls to process you may find it handy.
 
-* "Tokyo Tyrant":tokyocabinet.sourceforge.net/ or other key-value database to track which URLs have been visited.  TokyoTyrant's speed and network interface let you efficiently run many scrapers off the same central DB.
+* "Tokyo Tyrant":tokyocabinet.sourceforge.net/ or other key-value database to track which URLs have been visited.  TokyoTyrant's speed and network interface let you efficiently run many scrapers off the same central DB.  You need to get both the libraries _and_ the ruby interface for each of tokyo tyrant and tokyo cabinet.
 
 If you're using tokyo tyrant, you should consider optimizing the database:
 
@@ -51,7 +51,7 @@ This may seem insane but when you've had multiple scrapers running for two month
 
 h2. Output Files:
 
-As written, the scraper uses the cache database as only a visited-yet? flag (storing the scraped_at timestamp but nothing else.)  The actual scrape data is stored in flat files.  If you want to store everything in the database, swap out the ConditionalStore for a ReadThruStore.
+As written, the scraper uses the cache database as only a visited-yet? flag (storing the scraped_at timestamp but nothing else.)  The actual scrape data is stored in flat files.  If you want to store everything in the database, swap out the ConditionalStore for a ReadThruStore (and perhaps back the ReadThruStore with a table-type database such as TyrantTdbKeyStore)
 
 h3. Output file format
 
