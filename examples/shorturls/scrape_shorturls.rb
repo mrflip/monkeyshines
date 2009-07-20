@@ -58,9 +58,9 @@ src_store.skip!(opts[:skip].to_i) if opts[:skip]
 #
 # Track visited URLs with key-value database
 #
-handle = opts[:]
+handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
 HDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
-cache_loc  = opts[:cache_loc] || HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other)."
+cache_loc  = opts[:cache_loc] || HDB_PORTS[handle] or raise "Need a handle (bitly, tinyurl or other)."
 dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(cache_loc)
 # dest_cache = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(HDB_PORTS)
 
@@ -68,9 +68,9 @@ dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(cache_loc)
 # Store the data into flat files
 #
 dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern],
-  :handle => 'shorturl-'+opts[:handle], :dest_dir => opts[:dest_dir])
+  :handle => 'shorturl-'+handle, :dest_dir => opts[:dest_dir])
 dest_files   = Monkeyshines::ScrapeStore::ChunkedFlatFileStore.new(dest_pattern,
-  opts[:dest_chunk_time].to_i, opts)
+  opts[:chunk_time].to_i, opts)
 
 #
 # Conditional store uses the key-value DB to boss around the flat files --
