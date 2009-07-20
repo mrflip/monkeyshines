@@ -16,7 +16,7 @@ module Monkeyshines
         chunk_monitor.periodically do
           new_filename = filename_pattern.make()
           Monkeyshines.logger.info "Rotating chunked file #{filename} into #{new_filename}"
-          self.close!
+          self.close
           @filename = new_filename
           self.mkdir!
         end
