@@ -85,9 +85,12 @@ module Monkeyshines
           scrape_request.response_message = response.message[0..200].gsub(/[\n\r\t]+/, ' ')
           scrape_request.response         = response
           backoff response
-        rescue StandardError => e
+        rescue StandardError, Timeout::Error => e
           warn [e.to_s, scrape_request.to_s[0..2000].gsub(/[\n\r\t]+/, ' ')].join("\t")
           close # restart the connection
+        rescue Exception => e
+          Monkeyshines.logger.warn e
+          raise e
         end
         scrape_request.scraped_at = Time.now.utc.to_flat
         scrape_request
