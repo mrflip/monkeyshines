@@ -39,7 +39,7 @@ module Monkeyshines
       # Close the current session, if any
       def close
         Monkeyshines.logger.info "Closing HTTP connection for #{@host} from #{@connection_opened_at}"
-        @http.finish if @http
+        @http.finish if @http && @http.started?
         @http = nil
       end
 
