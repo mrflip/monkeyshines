@@ -7,7 +7,7 @@ module Monkeyshines
       begin
         @parsed_contents = JSON.load(contents.to_s)
       rescue Exception => e
-        warn "JSON not parsing : #{e}" ; return nil
+        warn "JSON not parsing : #{e.to_s[0..2000].gsub(/[\r\n]+/,"")}" ; return nil
       end
       @parsed_contents
     end

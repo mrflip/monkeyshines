@@ -42,7 +42,6 @@ module Monkeyshines
           yield scrape_job
           # reschedule for later
           reschedule qjob, scrape_job
-          sleep 1
         end
       end
 
@@ -67,12 +66,12 @@ module Monkeyshines
       #
       # This doesn't delete the job -- use reschedule if you are putting back an
       # existing qjob.
-      # 
+      #
       def save scrape_job, priority=nil, delay=nil
         body       = scrape_job.to_flat.join("\t")
         delay    ||= delay_to_next_scrape(scrape_job)
         priority ||= options[:priority]
-        log scrape_job, delay, priority
+        log scrape_job, priority, delay
         job_queue.put body, priority, delay, options[:time_to_run]
       end
       # delegates to #save() -- priority and delay are unchanged.
@@ -84,7 +83,7 @@ module Monkeyshines
       #
       def delay_to_next_scrape scrape_job
         rate  = scrape_job.avg_rate or return max_resched_delay
-        delay = items_goal / rate
+        delay = items_goal.to_f / rate
         delay = delay.clamp(min_resched_delay, max_resched_delay)
         delay.to_i
       end
@@ -92,15 +91,15 @@ module Monkeyshines
       #
       # A (very prolix) log statement
       #
-      def log scrape_job, delay=nil, priority=nil
+      def log scrape_job, priority=nil, delay=nil
         delay ||= delay_to_next_scrape(scrape_job)
-        rate_str = scrape_job.avg_rate ? "%8.3f min/pg" % ((1.0/60)*scrape_job.items_per_page/scrape_job.avg_rate) : " "*15
+        rate_str = scrape_job.avg_rate ? "%10.5f/s" % (scrape_job.avg_rate) : " "*12
         ll = "Rescheduling\t#{"%-23s"%scrape_job.query_term}\t"
         ll << "%6d" % priority if priority
         ll << "\t#{rate_str}"
         ll << "\t#{"%7d" % (scrape_job.prev_items||0)}"
         ll << "\t#{"%4d"%(scrape_job.new_items||0)} nu"
-        ll << "\tin #{"%8.2f" % (delay/60.0)} min"
+        ll << "\tin #{"%8.2f" % delay} s"
         ll << "\t#{(Time.now + delay).strftime("%Y-%m-%d %H:%M:%S")}"
         Monkeyshines.logger.info ll
       end
@@ -109,7 +108,7 @@ module Monkeyshines
       #
       # Beanstalkd interface
       #
-      
+
       #
       # De-serialize the scrape job from the queue.
       #
@@ -124,8 +123,8 @@ module Monkeyshines
       # Returns nil on error or timeout. Interrupt error passes through
       def reserve_job! to=10
         begin  qjob = job_queue.reserve(to)
-        rescue Beanstalk::TimedOut => e ; Monkeyshines.logger.info e.to_s           ; return ;
-        rescue StandardError => e       ; Monkeyshines.logger.warn e.to_s ; sleep 1 ; return ; end
+        rescue Beanstalk::TimedOut => e ; Monkeyshines.logger.info e.to_s ; sleep 0.4 ; return ;
+        rescue StandardError => e       ; Monkeyshines.logger.warn e.to_s ; sleep 1   ; return ; end
         qjob
       end
 

@@ -1,4 +1,5 @@
 require 'active_support/core_ext/class/inheritable_attributes'
+require 'time'
 module Monkeyshines
   #
   # Paginated lets you make repeated requests to collect a timeline or
@@ -154,7 +155,15 @@ module Monkeyshines
     end
 
     def finish_pagination!
+      # piw = [(prev_items.to_f ** 0.66), (items_per_page * hard_request_limit * 4.0)].min
+      # puts ([Time.now.strftime("%M:%S"), "%-23s"%query_term] + [prev_rate, sess_rate, avg_rate, sess_timespan.size.to_f, prev_items, sess_items, piw, (1000/avg_rate)].map{|s| "%15.4f"%(s||0) }).join("\t") rescue nil
       self.prev_rate     = avg_rate
+      if sess_items == (hard_request_limit * items_per_page)
+        # bump the rate if we hit the hard cap:
+        new_rate = [prev_rate * 1.25, 1000/120.0].max
+        Monkeyshines.logger.info "Bumping rate on #{query_term} from #{prev_rate} to #{new_rate}"
+        self.prev_rate = new_rate
+      end
       self.prev_items    = prev_items.to_i + sess_items.to_i
       self.prev_span     = sess_span + prev_span
       self.new_items     = sess_items.to_i + new_items.to_i
@@ -200,9 +209,10 @@ module Monkeyshines
     # How often an item rolls in, on average
     #
     def avg_rate
-      return nil if (prev_items.to_f + sess_items.to_f == 0)
-      prev_weight = prev_items.to_f ** 0.75
+      return nil if (sess_items.to_f == 0 && (prev_rate.blank? || prev_items.to_f == 0))
+      prev_weight = prev_items.to_f ** 0.66
       sess_weight = sess_items.to_f
+      prev_weight = [prev_weight, sess_weight*3].min if sess_weight > 0
       weighted_sum = (
         (prev_rate.to_f * prev_weight) + # damped previous avg
         (sess_rate.to_f * sess_weight) ) # current avg
