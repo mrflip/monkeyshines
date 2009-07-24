@@ -188,7 +188,7 @@ module Monkeyshines
       num_items = response.num_items
       # if there was overlap with a previous scrape, we have to count the items by hand
       prev_span = self.prev_span
-      if prev_span.max && (response.span.min < prev_span.max)
+      if prev_span.max && response.span && (response.span.min < prev_span.max)
         num_items = response.items.inject(0){|n,item| (prev_span.include? item['id']) ? n : n+1 }
       end
       self.sess_items += num_items
