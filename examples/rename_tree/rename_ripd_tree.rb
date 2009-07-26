@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 $: << File.dirname(__FILE__)+'/../../lib'
-$: << '/home/flip/ics/rubygems/trollop-1.14/lib'
+$: << ENV['HOME']+'/ics/rubygems/trollop-1.14/lib'
 $: << ENV['WUKONG_PATH'] if ENV['WUKONG_PATH']
 require "monkeyshines/utils/logger"
 require "monkeyshines/utils/filename_pattern.rb"; include Monkeyshines::Utils
@@ -27,25 +27,24 @@ RIPD_ROOT = '/data/ripd'
 # Old files to rename
 #
 old_filename_pats = {
-  RIPD_ROOT+'/_com/_tw/bundled/_200*/**/*' =>
-  { :patt => RIPD_ROOT+'/_com/_tw/:handle/bundled/_:date/_:hour/bundle+:timestamp.scrape.:ext'},
+  RIPD_ROOT+'/com.tw/com.twitter/bundled/_200*/**/*' =>
+    RIPD_ROOT+'/com.tw/:handle/bundled/_:date/_:hour/bundle+:timestamp.scrape.:ext',
   RIPD_ROOT+'/com.tw/com.twitter.stream/hosebird-*' =>
-  { :patt => RIPD_ROOT+'/com.tw/:handle/hosebird-:date-:time.:ext' },
+    RIPD_ROOT+'/com.tw/:handle/hosebird-:date-:time.:ext',
   RIPD_ROOT+'/com.tw/com.twitter.search/*/com.twitter.search+*[^r].tsv' =>
-  { :patt => RIPD_ROOT+'/com.tw/:handle/:date/:handle+:timestamp-:pid.:ext',
-    :toks => { :hostname => 'womper' } }
+    RIPD_ROOT+'/com.tw/:handle/:date/:handle+:timestamp-:pid.:ext'
 }
 
 #
 # How to template new filename
 #
 new_token_defaults = {
-  :root     =>   RIPD_ROOT,
+  :dest_dir =>   RIPD_ROOT,
   :pid      => '0',
   :hostname => 'old',
 }
 new_filename_pat = FilenamePattern.new(
-  ':root/:handle_prefix/:handle/:date/:handle+:timestamp-:pid-:hostname.:ext', new_token_defaults)
+  ':dest_dir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid-:hostname.:ext', new_token_defaults)
 
 #
 # Rename with logging and without overwriting
@@ -67,13 +66,12 @@ end
 #
 # Do this thing
 #
-old_filename_pats.each do |files_to_rename, instructions|
-  old_filename_pat = FilenamePattern.new(instructions[:patt])
+old_filename_pats.each do |files_to_rename, old_filename_pat|
   Monkeyshines.logger.info "Renaming files matching #{files_to_rename}"
   Dir[files_to_rename].sort.each do |old_filename|
     next unless File.file?(old_filename)
     filename_tokens = old_filename_pat.recognize(old_filename) or next
-    fix_filename_tokens! filename_tokens.merge(instructions[:toks])
+    fix_filename_tokens! filename_tokens
     new_filename = new_filename_pat.make(filename_tokens)
     rename_carefully old_filename, new_filename, opts[:dry_run]
   end

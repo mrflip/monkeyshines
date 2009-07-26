@@ -10,6 +10,8 @@ module Monkeyshines
       # the base regexp pattern used to recognize templated products.
       attr_accessor :recognizer_pattern
 
+      DEFAULT_PATTERN_STR = ":dest_dir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid-:hostname.tsv"
+
       def initialize pattern, token_val_defaults={}
         self.pattern = pattern
         self.token_val_defaults    = token_val_defaults
