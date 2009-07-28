@@ -39,7 +39,11 @@ module Monkeyshines
       def make_recognizer token_regexps={}
         return RECOGNIZER_REGEXPS[pattern] if RECOGNIZER_REGEXPS[pattern]
         tokens        = []
-        recognizer    = recognizer_pattern.gsub(/:(\w+)/){ tokens << $1.to_sym ; '('+recognize_replace($1, token_regexps)+')'  }
+        recognizer    = recognizer_pattern.gsub(/:(\\\{\w+\\\}|\w+)/) do
+          tok = $1.gsub(/\W/,'')
+          tokens << tok.to_sym
+          '('+recognize_replace(tok, token_regexps)+')'
+        end
         RECOGNIZER_REGEXPS[pattern] = [Regexp.new(recognizer), tokens]
       end
 
