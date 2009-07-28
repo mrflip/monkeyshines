@@ -66,7 +66,8 @@ end
 #
 # Do this thing
 #
-old_filename_pats.each do |files_to_rename, old_filename_pat|
+old_filename_pats.each do |files_to_rename, old_filename_pat_str|
+  old_filename_pat = FilenamePattern.new(old_filename_pat_str)
   Monkeyshines.logger.info "Renaming files matching #{files_to_rename}"
   Dir[files_to_rename].sort.each do |old_filename|
     next unless File.file?(old_filename)
