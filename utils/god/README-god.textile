@@ -1,0 +1,82 @@
+
+Keep running:
+
+* Worker queue (beanstalkd)
+* Backing store (ttserver)
+* Request queue-fed Scrapers (list of scripts)
+* Feed/Periodic scrapers
+* Constant scrapers
+
+* http://god.rubyforge.org/
+* http://railscasts.com/episodes/130-monitoring-with-god
+
+    sudo gem install god
+    god -c config/mailit.god
+    god status
+    god terminate
+    god log mailit-workling
+    kill `cat log/workling.pid`
+
+* http://nubyonrails.com/articles/about-this-blog-beanstalk-messaging-queue
+** The "god.conf":http://pastie.textmate.org/private/ovgxu2ihoicli2ktrwtbew is
+   taken from there.
+
+
+h2. God
+
+  Map:
+
+  MONKEYSHINES = {
+    monkeyshines_handle => {
+      # standard args
+      :src_loc    => xx         # Defaults used if omitted or true
+      :src_type   => xx         # ""
+      :dest_loc   => xx         # ""
+      :dest_type  => xx         # ""
+      :log        => xx         # ""
+      :beanstalkd => bs_handle, # true for default, omit/nil for none
+      :tyrant     => tt_handle, # true for default, omit/nil for none
+      # plus any others you'd like to set.
+      :foo        => 'bar'
+    }, ...
+  }
+
+  BEANSTALKDS = {
+    beanstalkd_handle => { :host => xx, :port => xx, ... },  }
+
+  TYRANTS = {
+    tyrant_handle =>  { :host => xx, :port => xx, :file => xx, ... } }
+    
+
+h2. Beanstalkd
+
+*Usage*:
+
+    beanstalkd  --help
+    Use: beanstalkd [OPTIONS]
+
+    Options:
+     -d       detach
+     -l ADDR  listen on address (default is 0.0.0.0)
+     -p PORT  listen on port (default is 11300)
+     -u USER  become user and group
+     -z SIZE  set the maximum job size in bytes (default is 65535)
+     -v       show version information
+     -h       show this help
+
+
+h2. Tokyo Tyrant
+
+*Usage*:
+
+    ttserver --help
+    ttserver: the server of Tokyo Tyrant
+
+    usage:
+    ttserver [-host name] [-port num] [-thnum num] [-tout num] [-dmn]
+      [-pid path] [-kl] [-log path] [-ld|-le] [-ulog path]
+      [-ulim num] [-uas] [-sid num]
+      [-mhost name] [-mport num] [-rts path] [-rcc] [-skel name]
+      [-ext path] [-extpc name period] [-mask expr] [-unmask expr] [dbname]
+
+

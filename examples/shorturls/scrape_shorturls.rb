@@ -27,25 +27,25 @@ require 'trollop' # gem install trollop
 #
 #
 opts = Trollop::options do
-  opt :base_url,       "Host part of URL: eg tinyurl.com",             :type => String
+  opt :base_url,       "Host part of URL: eg tinyurl.com",             :type => String, :required => true
   opt :log,            "Log file name; leave blank to use STDERR",     :type => String
   # input from file
-  opt :from_type,      "Class name for scrape store to load from",     :type => String
-  opt :from,           "URI for scrape store to load from",            :type => String
+  opt :from_type,      "Class name for scrape store to load from",     :type => String, :default => 'FlatFileStore'
+  opt :from,           "Location of URLs to scrape",                   :type => String
   opt :skip,           "Initial lines to skip",                        :type => Integer
   # OR do a random walk
-  opt :min_limit,      "Smallest sequential URL to randomly visit",    :type => Integer
-  opt :max_limit,      "Largest sequential URL to randomly visit",     :type => Integer
-  opt :encoding_radix, "36 for most, 62 if URLs are case-sensitive",   :type => Integer
+  opt :min_limit,      "Smallest sequential URL to randomly visit",    :type => Integer # default in shorturl_sequence.rb
+  opt :max_limit,      "Largest sequential URL to randomly visit",     :type => Integer # default in shorturl_sequence.rb
+  opt :encoding_radix, "36 for most, 62 if URLs are case-sensitive",   :type => Integer, :default => 36
   # output storage
   opt :cache_loc,      "URI for cache server",                         :type => String
   opt :chunk_time,     "Frequency to rotate chunk files (in seconds)", :type => Integer, :default => 60*60*4
-  opt :dest_dir,       "Filename base to store output. e.g. --dump_basename=/data/ripd", :type => String
+  opt :dest_dir,       "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
   opt :dest_pattern,   "Pattern for dump file output",                 :default => ":dest_dir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid.tsv"
 end
 # ******************** Log ********************
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1000, :time_interval => 30)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000, :time_interval => 30)
 
 #
 # ******************** Load from store or random walk ********************
@@ -100,7 +100,6 @@ src_store.each do |bareurl, *args|
     next unless response.response_code || response.contents # don't store bad fetches
     [response.scraped_at, response]                         # timestamp into cache, result into flat file
   end
-
   periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
 end
 dest_store.close

@@ -1,6 +1,18 @@
 require 'net/http'
+Net::HTTP.version_1_2
 module Monkeyshines
   module ScrapeEngine
+
+    #
+    # Notes:
+    #
+    # On HTTP:
+    # * "RFC 2616 (HTTP/1.1)":http://tools.ietf.org/html/rfc2616
+    # * "Header Fields":http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+    # * "Notes on Keep-Alive":http://www.hpl.hp.com/personal/ange/archives/archives-95/http-wg-archive/1661.html
+    #
+    # * "right_http_connection is another HTTP lib":http://github.com/rightscale/right_http_connection/tree/master/lib/right_http_connection.rb
+
 
     #
     # Opens a persistent connection and makes repeated requests.
@@ -9,6 +21,8 @@ module Monkeyshines
     # * backoff and logging on client or server errors
     #
     class HttpScraper
+      # amount to throttle non-persistent connections.
+      CNXN_SLEEP_TIME = 0.5
       # Default user agent presented to servers
       USER_AGENT = "Monkeyshines v0.1"
       attr_accessor :connection_opened_at, :username, :password, :http_req_options, :options
@@ -19,6 +33,7 @@ module Monkeyshines
         self.password = options[:password]
         self.http_req_options = {}
         self.http_req_options["User-Agent"] = options[:user_agent] || USER_AGENT
+        self.http_req_options["Connection"] = "keep-alive"
       end
 
       #
@@ -61,6 +76,9 @@ module Monkeyshines
       # log response.
       #
       def backoff response
+        # backoff when server isn't persisting connection
+        sleep CNXN_SLEEP_TIME if (! @http.started?)
+        # Response-based sleep time
         sleep_time = 0
         case response
         when Net::HTTPSuccess             then return         # 2xx
