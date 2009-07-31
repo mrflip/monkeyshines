@@ -18,7 +18,7 @@ module Monkeyshines
       :scraper           => :http_scraper,
 
       #
-      :dest_type         => :conditional_store
+      :dest_type         => :conditional_store,
       :dest_cache_name   => nil,
       :dest_filename     => nil,
       :dest_pattern      => nil,

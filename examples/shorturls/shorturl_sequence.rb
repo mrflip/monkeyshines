@@ -42,7 +42,7 @@ module ShorturlSequence
 end
 
 class Monkeyshines::ScrapeStore::RandomUrlStream
-  DEFAULT_MAX_URLSTR = 'dzzzzz'.to_i(36)
+  DEFAULT_MAX_URLSTR = '1zzzzz'.to_i(36)
   DEFAULT_RADIX = {
     'http://tinyurl.com/' => 36,
     'http://bit.ly/'      => 62,

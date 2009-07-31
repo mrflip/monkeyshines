@@ -30,10 +30,10 @@ opts = Trollop::options do
   opt :base_url,       "Host part of URL: eg tinyurl.com",             :type => String, :required => true
   opt :log,            "Log file name; leave blank to use STDERR",     :type => String
   # input from file
-  opt :from_type,      "Class name for scrape store to load from",     :type => String, :default => 'FlatFileStore'
   opt :from,           "Location of URLs to scrape",                   :type => String
   opt :skip,           "Initial lines to skip",                        :type => Integer
   # OR do a random walk
+  opt :random,         "Generate and visit random URL suffixes"
   opt :min_limit,      "Smallest sequential URL to randomly visit",    :type => Integer # default in shorturl_sequence.rb
   opt :max_limit,      "Largest sequential URL to randomly visit",     :type => Integer # default in shorturl_sequence.rb
   opt :encoding_radix, "36 for most, 62 if URLs are case-sensitive",   :type => Integer, :default => 36
@@ -43,23 +43,30 @@ opts = Trollop::options do
   opt :dest_dir,       "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
   opt :dest_pattern,   "Pattern for dump file output",                 :default => ":dest_dir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid.tsv"
 end
+handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
+
 # ******************** Log ********************
+opts[:log] = (WORK_DIR+"/log/shorturls_#{handle}-#{Time.now.to_flat}.log") if (opts[:log]=='')
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000, :time_interval => 30)
 
 #
 # ******************** Load from store or random walk ********************
 #
-src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type]) or raise "Can't load #{opts[:from_type]}. Try --from-type=RandomUrlStream or --from-type=FlatFileStore"
-src_store = src_store_klass.new_from_command_line(opts, :filemode => 'r')
-src_store.skip!(opts[:skip].to_i) if opts[:skip]
+if opts[:from]
+  src_store = Monkeyshines::ScrapeStore::FlatFileStore.new_from_command_line(opts, :filemode => 'r')
+  src_store.skip!(opts[:skip].to_i) if opts[:skip]
+elsif opts[:random]
+  src_store = Monkeyshines::ScrapeStore::RandomUrlStream.new_from_command_line(opts)
+else
+  Trollop::die "Need to either say --random or --from=filename"
+end
 
 #
 # ******************** Store output ********************
 #
 # Track visited URLs with key-value database
 #
-handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
 HDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
 cache_loc  = opts[:cache_loc] || HDB_PORTS[handle] or raise "Need a handle (bitly, tinyurl or other)."
 dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(cache_loc)
