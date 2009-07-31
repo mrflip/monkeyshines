@@ -104,7 +104,7 @@ module Monkeyshines
           scrape_request.response         = response
           backoff response
         rescue StandardError, Timeout::Error => e
-          warn ["Recovering from scraper error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
+          Monkeyshines.logger.warn ["Recovering from scraper error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
           close # restart the connection
         rescue Exception => e
           Monkeyshines.logger.warn e
