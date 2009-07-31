@@ -2,7 +2,7 @@
 $: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
 #require 'rubygems'
 # require 'wukong'
-# require 'monkeyshines'
+require 'monkeyshines'
 # require 'monkeyshines/utils/uri'
 # require 'monkeyshines/utils/filename_pattern'
 # require 'monkeyshines/scrape_store/conditional_store'
@@ -44,28 +44,32 @@ iter = 0
 # 123456789-123456789-
 # http://bit.ly/
 # http://tinyurl.com/
-BASE_URL_LEN = 'http://tinyurl.com/'.length
+BASE_URL     = "http://is.gd/"
+RADIX        = 62
+HANDLE       = BASE_URL.gsub(%r{^http://},'').gsub(/\.com$/,'').gsub(/\W+/,'')
+BASE_URL_LEN = BASE_URL.length
 MAX_TAIL_LEN = BASE_URL_LEN + 2 + 6
-SIX_CHARS    = 36**6
-File.open('rawd/req/shorturl_requests-20090710-tinyurl.tsv') do |reqfile|
+SIX_CHARS    = RADIX**6
+File.open("rawd/req/shorturl_requests-20090710-#{HANDLE}.tsv"
+  ) do |reqfile|
   reqfile.each do |url|
     #decode
-    next unless url.length == MAX_TAIL_LEN
+    next unless url.length <= MAX_TAIL_LEN
     tail = url.chomp.strip[BASE_URL_LEN..-1] || ''
-    tail.downcase!
-    asnum = tail.to_i(36) rescue -1
-    next if asnum > SIX_CHARS
+    # tail.downcase!
+    asnum = ShorturlSequence.decode_str tail, RADIX rescue nil  # tail.to_i(36) rescue -1
+    next unless asnum && asnum < SIX_CHARS
     size = (asnum / 1_000_000)
     len  = tail.length
     # track stats
     len_histo << len
     num_histo << size
-    ltr_histo << len.to_s+tail[0..0]
+    ltr_histo << "%s-%s" % [len, tail[0..0]] #  + (len > 1 ? '.'* (len-1) : '')
     puts iter if ((iter += 1) % 1_000_000 == 0)
 
   end
 end
-puts "Size of decoded:"
+puts "Integer magnitude of decoded (M):"
 num_histo.dump
 puts "Length of encoded:"
 len_histo.dump

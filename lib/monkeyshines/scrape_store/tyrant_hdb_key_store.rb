@@ -13,9 +13,19 @@ module Monkeyshines
       def initialize db_uri=nil, *args
         db_uri ||= ':1978'
         self.db_host, self.db_port = db_uri.split(':')
-        self.db = TokyoTyrant::RDB.new
-        db.open(db_host, db_port) or raise("Can't open DB #{db_uri}. Pass in host:port, default is ':1978' #{db.ecode}: #{db.errmsg(db.ecode)}")
         super *args
+      end
+
+      def db
+        return @db if @db
+        @db ||= TokyoTyrant::RDB.new
+        @db.open(db_host, db_port) or raise("Can't open DB #{db_uri}. Pass in host:port, default is ':1978' #{@db.ecode}: #{@db.errmsg(@db.ecode)}")
+        @db
+      end
+
+      def close
+        @db.close if @db
+        @db = nil
       end
 
       # Save the value into the database without waiting for a response.
@@ -27,7 +37,7 @@ module Monkeyshines
       def include? *args
         db.has_key? *args
       end
-      
+
       # require 'memcache'
       # def initialize db_uri=nil, *args
       #   # db_uri ||= ':1978'
