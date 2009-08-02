@@ -78,7 +78,7 @@ module Monkeyshines
       def dest_store
         return @dest_store if @dest_store
         # Track visited URLs with key-value database
-        @dest_cache = Monkeyshines::Store::TyrantHdbKeyStore.new(opts[:cache_loc])
+        @dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(opts[:cache_loc])
         # Store the data into flat files
         @dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern], :handle => opts[:handle], :dest_dir => opts[:dest_dir])
         @dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(dest_pattern, opts[:chunk_time].to_i, opts)

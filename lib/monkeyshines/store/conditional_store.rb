@@ -6,7 +6,7 @@ module Monkeyshines
       #
       #
       # +cache+ must behave like a hash (Hash and
-      #  Monkeyshines::Store::TyrantHdbKeyStore are both cromulent
+      #  Monkeyshines::Store::TyrantRdbKeyStore are both cromulent
       #  choices).
       #
       #

@@ -27,10 +27,10 @@ src_store_klass = Wukong.class_from_resource('Monkeyshines::Store::'+opts[:from_
 src_store = src_store_klass.new(opts[:from], opts.merge(:filemode => 'r'))
 
 # ******************** Store into read-thru cache ********************
-HDB_PORTS = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
-dest_uri = HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
-dest_store = Monkeyshines::Store::TyrantHdbKeyStore.new(dest_uri)
-# dest_store = Monkeyshines::Store::MultiplexShorturlCache.new(HDB_PORTS)
+RDB_PORTS = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
+dest_uri = RDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
+dest_store = Monkeyshines::Store::TyrantRdbKeyStore.new(dest_uri)
+# dest_store = Monkeyshines::Store::MultiplexShorturlCache.new(RDB_PORTS)
 
 # ******************** Dump ********************
 src_store.each do |_, url, scat, *args|

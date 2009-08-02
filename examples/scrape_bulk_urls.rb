@@ -11,7 +11,8 @@ require 'wuclan/domains/twitter'
 # un-namespace request classes.
 include Wuclan::Domains::Twitter::Scrape
 
-WORK_DIR = Pathname.new(File.dirname(__FILE__)+"/rawd").realpath.to_s
+Monkeyshines::WORK_DIR = '/tmp'
+WORK_DIR = Pathname.new(Monkeyshines::WORK_DIR).realpath.to_s
 
 # ===========================================================================
 #
@@ -70,7 +71,7 @@ request_stream = TwitterRequestStream.new TwitterUserRequest, src_store
 #
 # Track visited URLs with key-value database
 #
-dest_cache = Monkeyshines::Store::TyrantHdbKeyStore.new(opts[:cache_loc])
+dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(opts[:cache_loc])
 
 #
 # Store the data into flat files

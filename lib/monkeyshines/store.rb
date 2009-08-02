@@ -6,7 +6,7 @@ module Monkeyshines
     autoload :KeyStore,             'monkeyshines/store/key_store'
     autoload :TokyoTdbKeyStore,     'monkeyshines/store/tokyo_tdb_key_store'
     autoload :TyrantTdbKeyStore,    'monkeyshines/store/tyrant_tdb_key_store'
-    autoload :TyrantHdbKeyStore,    'monkeyshines/store/tyrant_hdb_key_store'
+    autoload :TyrantRdbKeyStore,    'monkeyshines/store/tyrant_rdb_key_store'
     autoload :ReadThruStore,        'monkeyshines/store/read_thru_store'
   end
 end

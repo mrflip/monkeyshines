@@ -67,10 +67,10 @@ end
 #
 # Track visited URLs with key-value database
 #
-HDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
-cache_loc  = opts[:cache_loc] || HDB_PORTS[handle] or raise "Need a handle (bitly, tinyurl or other)."
-dest_cache = Monkeyshines::Store::TyrantHdbKeyStore.new(cache_loc)
-# dest_cache = Monkeyshines::Store::MultiplexShorturlCache.new(HDB_PORTS)
+RDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
+cache_loc  = opts[:cache_loc] || RDB_PORTS[handle] or raise "Need a handle (bitly, tinyurl or other)."
+dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(cache_loc)
+# dest_cache = Monkeyshines::Store::MultiplexShorturlCache.new(RDB_PORTS)
 
 #
 # Store the data into flat files
