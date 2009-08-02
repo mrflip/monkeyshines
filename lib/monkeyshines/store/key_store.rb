@@ -1,6 +1,6 @@
 module Monkeyshines
-  module ScrapeStore
-    class KeyStore < Monkeyshines::ScrapeStore::Base
+  module Store
+    class KeyStore < Monkeyshines::Store::Base
       # The actual backing store; should respond to #set and #get methods
       attr_accessor :db
 

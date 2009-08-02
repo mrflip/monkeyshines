@@ -29,10 +29,10 @@ RIPD_ROOT = '/data/ripd'
 old_filename_pats = {
   RIPD_ROOT+'/com.tw/com.twitter/bundled/_200*/**/*' =>
     RIPD_ROOT+'/com.tw/:handle/bundled/_:date/_:hour/bundle+:timestamp.scrape.:ext',
-  RIPD_ROOT+'/com.tw/com.twitter.stream/hosebird-*' =>
-    RIPD_ROOT+'/com.tw/:handle/hosebird-:date-:time.:ext',
-  RIPD_ROOT+'/com.tw/com.twitter.search/*/com.twitter.search+*[^r].tsv' =>
-    RIPD_ROOT+'/com.tw/:handle/:date/:handle+:timestamp-:pid.:ext'
+  # RIPD_ROOT+'/com.tw/com.twitter.stream/hosebird-*' =>
+  #   RIPD_ROOT+'/com.tw/:handle/hosebird-:date-:time.:ext',
+  # RIPD_ROOT+'/com.tw/com.twitter.search/*/com.twitter.search+*[^r].tsv' =>
+  #   RIPD_ROOT+'/com.tw/:handle/:date/:handle+:timestamp-:pid.:ext'
 }
 
 #

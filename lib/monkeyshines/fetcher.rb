@@ -1,4 +1,4 @@
 module Monkeyshines
-  module ScrapeEngine
+  module Fetcher
   end
 end

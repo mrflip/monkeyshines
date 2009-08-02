@@ -1,9 +1,9 @@
 require 'fileutils'; include FileUtils
 
 module Monkeyshines
-  module ScrapeStore
+  module Store
     #
-    class FlatFileStore < ScrapeStore::Base
+    class FlatFileStore < Store::Base
       attr_accessor :filename, :filemode
 
       #

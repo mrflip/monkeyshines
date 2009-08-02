@@ -3,7 +3,7 @@ require 'rubygems'
 $: << File.dirname(__FILE__)+'/lib'
 require 'wukong'
 require 'monkeyshines'
-require 'monkeyshines/http_scraper'
+require 'monkeyshines/http_fetcher'
 
 request_filename = ARGV[0]
 if ! request_filename
@@ -23,7 +23,7 @@ class String
   end
 end
 
-class Monkeyshines::FlatFileScrapeStore
+class Monkeyshines::FlatFileStore
   attr_accessor :file, :filename
   def initialize filename
     self.filename = filename
@@ -35,10 +35,10 @@ class Monkeyshines::FlatFileScrapeStore
   end
 end
 
-scraper = Monkeyshines::HttpScraper.new('twitter.com')
+fetcher = Monkeyshines::HttpFetcher.new('twitter.com')
 reqs    = Monkeyshines::FlatFileRequestStream.new(request_filename, SimpleScrapeRequest)
-store   = Monkeyshines::FlatFileScrapeStore.new(dump_filename)
+store   = Monkeyshines::FlatFileStore.new(dump_filename)
 reqs.each do |scrape_request|
   p scrape_request
-  store << scraper.get(scrape_request)
+  store << fetcher.get(scrape_request)
 end

@@ -27,15 +27,15 @@ periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 20_00
 # ******************** Read From ********************
 TYRANT_PORTS = { 'tinyurl' => ":10001", 'bitly' => ":10002", 'other' => ":10003" }
 src_uri = TYRANT_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
-src_store = Monkeyshines::ScrapeStore::TyrantTdbKeyStore.new(src_uri)
+src_store = Monkeyshines::Store::TyrantTdbKeyStore.new(src_uri)
 Monkeyshines.logger.info "Loaded store with #{src_store.size}"
 
 # ******************** Write into ********************
-# dest_store = Monkeyshines::ScrapeStore::FlatFileStore.new(opts[:into], opts.reverse_merge(:filemode => 'w'))
+# dest_store = Monkeyshines::Store::FlatFileStore.new(opts[:into], opts.reverse_merge(:filemode => 'w'))
 HDB_PORTS = { 'tinyurl' => ":10042", 'bitly' => ":10043", 'other' => ":10044" }
 dest_uri = HDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
-dest_store = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(dest_uri)
-# src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
+dest_store = Monkeyshines::Store::TyrantHdbKeyStore.new(dest_uri)
+# src_store_klass = Wukong.class_from_resource('Monkeyshines::Store::'+opts[:from_type])
 # src_store = src_store_klass.new(opts[:from])
 Monkeyshines.logger.info "Loading into store with #{dest_store.size}"
 

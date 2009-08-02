@@ -1,6 +1,6 @@
 module Monkeyshines
-  module ScrapeStore
-    class ReadThruStore < Monkeyshines::ScrapeStore::TyrantTdbKeyStore
+  module Store
+    class ReadThruStore < Monkeyshines::Store::TyrantTdbKeyStore
 
       #
       # If key is absent, save the result of calling the block.
@@ -8,7 +8,7 @@ module Monkeyshines
       #
       # Ex:
       #   rt_store.set(url) do
-      #     scraper.get url # will only be called if url isn't in rt_store
+      #     fetcher.get url # will only be called if url isn't in rt_store
       #   end
       #
       def set key, force=nil, &block

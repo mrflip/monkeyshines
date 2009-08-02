@@ -1,11 +1,11 @@
-require 'monkeyshines/scrape_engine/http_scraper'
+require 'monkeyshines/fetcher/http_fetcher'
 module Monkeyshines
-  module ScrapeEngine
+  module Fetcher
     #
     # Requests the HEAD only, for cases where you don't need to know actual page
     # contents (e.g. you're looking for server info or scraping URL shorteners)
     #
-    class HttpHeadScraper < HttpScraper
+    class HttpHeadFetcher < HttpFetcher
 
       #
       # Build and dispatch request

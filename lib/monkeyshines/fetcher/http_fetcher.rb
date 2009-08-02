@@ -1,7 +1,7 @@
 require 'net/http'
 Net::HTTP.version_1_2
 module Monkeyshines
-  module ScrapeEngine
+  module Fetcher
 
     #
     # Notes:
@@ -20,7 +20,7 @@ module Monkeyshines
     # * authentication
     # * backoff and logging on client or server errors
     #
-    class HttpScraper
+    class HttpFetcher
       # amount to throttle non-persistent connections.
       CNXN_SLEEP_TIME = 0.5
       # Default user agent presented to servers
@@ -104,7 +104,7 @@ module Monkeyshines
           scrape_request.response         = response
           backoff response
         rescue StandardError, Timeout::Error => e
-          Monkeyshines.logger.warn ["Recovering from scraper error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
+          Monkeyshines.logger.warn ["Recovering from fetcher error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
           close # restart the connection
         rescue Exception => e
           Monkeyshines.logger.warn e

@@ -21,14 +21,14 @@ Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 Trollop::die :from_type unless opts[:from_type]
 
 # ******************** Read From ********************
-src_store_klass = Wukong.class_from_resource('Monkeyshines::ScrapeStore::'+opts[:from_type])
+src_store_klass = Wukong.class_from_resource('Monkeyshines::Store::'+opts[:from_type])
 src_store = src_store_klass.new(opts[:from])
 Monkeyshines.logger.info "Loaded store with #{src_store.size}"
 
 # ******************** Write into ********************
 DUMPFILE_BASE = opts[:into]
 def make_store uri
-  Monkeyshines::ScrapeStore::FlatFileStore.new "#{DUMPFILE_BASE+"-"+uri}.tsv", :filemode => 'w'
+  Monkeyshines::Store::FlatFileStore.new "#{DUMPFILE_BASE+"-"+uri}.tsv", :filemode => 'w'
 end
 dests = { }
 [ 'tinyurl', 'bitly', 'other'

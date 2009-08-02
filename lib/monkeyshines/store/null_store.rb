@@ -1,6 +1,6 @@
 module Monkeyshines
-  module ScrapeStore
-    class NullStore < Monkeyshines::ScrapeStore::Base
+  module Store
+    class NullStore < Monkeyshines::Store::Base
 
       def each *args, &block
       end

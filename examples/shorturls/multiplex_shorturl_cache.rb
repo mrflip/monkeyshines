@@ -1,4 +1,4 @@
-class Monkeyshines::ScrapeStore::MultiplexShorturlCache < Monkeyshines::ScrapeStore::ReadThruStore
+class Monkeyshines::Store::MultiplexShorturlCache < Monkeyshines::Store::ReadThruStore
   attr_accessor :dests, :store_uris
 
   # Store into tokyo tyrant
@@ -7,7 +7,7 @@ class Monkeyshines::ScrapeStore::MultiplexShorturlCache < Monkeyshines::ScrapeSt
   def initialize store_uris, options={}
     self.dests = { }
     store_uris.each do |handle, uri|
-      dests[handle] = Monkeyshines::ScrapeStore::ReadThruStore.new uri
+      dests[handle] = Monkeyshines::Store::ReadThruStore.new uri
     end
   end
 

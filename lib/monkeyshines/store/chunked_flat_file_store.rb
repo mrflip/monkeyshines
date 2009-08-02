@@ -1,6 +1,6 @@
 module Monkeyshines
-  module ScrapeStore
-    class ChunkedFlatFileStore < Monkeyshines::ScrapeStore::FlatFileStore
+  module Store
+    class ChunkedFlatFileStore < Monkeyshines::Store::FlatFileStore
       attr_accessor :filename_pattern, :chunk_monitor
 
       def initialize filename_pattern, time_interval=nil, *args

@@ -1,5 +1,5 @@
 module Monkeyshines
-  module ScrapeStore
+  module Store
     class Base
       def initialize options={}
         Monkeyshines.logger.info "Opening #{self.class.to_s}"

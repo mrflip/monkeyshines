@@ -71,7 +71,7 @@ class IsgdShorturl < Shorturl62
   end
 end
 
-class Monkeyshines::ScrapeStore::SequentialUrlStream
+class Monkeyshines::Store::SequentialUrlStream
   DEFAULT_MAX_URLSTR = '1zzzzz'.to_i(36)
   DEFAULT_RADIX = {
     'http://tinyurl.com/' => 36,
@@ -106,7 +106,7 @@ class Monkeyshines::ScrapeStore::SequentialUrlStream
   end
 end
 
-class Monkeyshines::ScrapeStore::RandomUrlStream < Monkeyshines::ScrapeStore::SequentialUrlStream
+class Monkeyshines::Store::RandomUrlStream < Monkeyshines::Store::SequentialUrlStream
   # An infinite stream of urls in range
   def each *args, &block
     loop do

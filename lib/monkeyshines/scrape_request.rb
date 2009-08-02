@@ -1,8 +1,8 @@
 module Monkeyshines
   # class ScrapeRequestGroup
-  #   attr_accessor :http_scraper, :thing
+  #   attr_accessor :http_fetcher, :thing
   #   def initialize thing
-  #     self.http_scraper = HTTPScraper.new('twitter.com')
+  #     self.http_fetcher = HTTPFetcher.new('twitter.com')
   #     self.thing = thing
   #   end
   # end

@@ -3,7 +3,7 @@ require 'fileutils'; include FileUtils
 module TwitterFriends
   module Scrape
 
-    class TarScrapeStore
+    class TarStore
       attr_accessor :tar_filename
       def initialize tar_filename
         self.tar_filename = tar_filename

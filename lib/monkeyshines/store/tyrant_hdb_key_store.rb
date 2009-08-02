@@ -1,11 +1,11 @@
 require 'tokyotyrant'
 module Monkeyshines
-  module ScrapeStore
+  module Store
 
     #
     # Implementation of KeyStore with a Local TokyoCabinet hash database (HDB)
     #
-    class TyrantHdbKeyStore < Monkeyshines::ScrapeStore::KeyStore
+    class TyrantHdbKeyStore < Monkeyshines::Store::KeyStore
       attr_accessor :db_host, :db_port
 
       # pass in the filename or URI of a tokyo cabinet table-style DB

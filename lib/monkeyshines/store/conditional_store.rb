@@ -1,12 +1,12 @@
 module Monkeyshines
-  module ScrapeStore
-    class ConditionalStore < Monkeyshines::ScrapeStore::Base
+  module Store
+    class ConditionalStore < Monkeyshines::Store::Base
       attr_accessor :cache, :store, :misses
 
       #
       #
       # +cache+ must behave like a hash (Hash and
-      #  Monkeyshines::ScrapeStore::TyrantHdbKeyStore are both cromulent
+      #  Monkeyshines::Store::TyrantHdbKeyStore are both cromulent
       #  choices).
       #
       #
@@ -23,7 +23,7 @@ module Monkeyshines
       #
       # Ex:
       #   rt_store.set(url) do
-      #     scraper.get url # will only be called if url isn't in rt_store
+      #     fetcher.get url # will only be called if url isn't in rt_store
       #   end
       #
       def set key, force=nil, &block

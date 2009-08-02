@@ -8,8 +8,8 @@ require 'shorturl_request'
 require 'shorturl_sequence'
 require 'monkeyshines/utils/uri'
 require 'monkeyshines/utils/filename_pattern'
-require 'monkeyshines/scrape_store/conditional_store'
-require 'monkeyshines/scrape_engine/http_head_scraper'
+require 'monkeyshines/store/conditional_store'
+require 'monkeyshines/fetcher/http_head_fetcher'
 require 'trollop' # gem install trollop
 
 # ===========================================================================
@@ -54,10 +54,10 @@ periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000
 # ******************** Load from store or random walk ********************
 #
 if opts[:from]
-  src_store = Monkeyshines::ScrapeStore::FlatFileStore.new_from_command_line(opts, :filemode => 'r')
+  src_store = Monkeyshines::Store::FlatFileStore.new_from_command_line(opts, :filemode => 'r')
   src_store.skip!(opts[:skip].to_i) if opts[:skip]
 elsif opts[:random]
-  src_store = Monkeyshines::ScrapeStore::RandomUrlStream.new_from_command_line(opts)
+  src_store = Monkeyshines::Store::RandomUrlStream.new_from_command_line(opts)
 else
   Trollop::die "Need to either say --random or --from=filename"
 end
@@ -69,15 +69,15 @@ end
 #
 HDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
 cache_loc  = opts[:cache_loc] || HDB_PORTS[handle] or raise "Need a handle (bitly, tinyurl or other)."
-dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(cache_loc)
-# dest_cache = Monkeyshines::ScrapeStore::MultiplexShorturlCache.new(HDB_PORTS)
+dest_cache = Monkeyshines::Store::TyrantHdbKeyStore.new(cache_loc)
+# dest_cache = Monkeyshines::Store::MultiplexShorturlCache.new(HDB_PORTS)
 
 #
 # Store the data into flat files
 #
 dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern],
   :handle => 'shorturl-'+handle, :dest_dir => opts[:dest_dir])
-dest_files   = Monkeyshines::ScrapeStore::ChunkedFlatFileStore.new(dest_pattern,
+dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(dest_pattern,
   opts[:chunk_time].to_i, opts)
 
 #
@@ -85,12 +85,12 @@ dest_files   = Monkeyshines::ScrapeStore::ChunkedFlatFileStore.new(dest_pattern,
 # requests are only made (and thus data is only output) if the url is missing
 # from the key-value store.
 #
-dest_store = Monkeyshines::ScrapeStore::ConditionalStore.new(dest_cache, dest_files)
+dest_store = Monkeyshines::Store::ConditionalStore.new(dest_cache, dest_files)
 
 #
-# ******************** Scraper ********************
+# ******************** Fetcher ********************
 #
-scraper = Monkeyshines::ScrapeEngine::HttpHeadScraper.new
+fetcher = Monkeyshines::Fetcher::HttpHeadFetcher.new
 
 #
 # ******************** Do this thing ********************
@@ -101,13 +101,13 @@ src_store.each do |bareurl, *args|
   next if bareurl =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at|bkite.com)}
   req = ShorturlRequest.new(bareurl, *args)
 
-  # conditional store only calls scraper if url key is missing.
+  # conditional store only calls fetcher if url key is missing.
   result = dest_store.set( req.url ) do
-    response = scraper.get(req)                             # do the url fetch
+    response = fetcher.get(req)                             # do the url fetch
     next unless response.response_code || response.contents # don't store bad fetches
     [response.scraped_at, response]                         # timestamp into cache, result into flat file
   end
   periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
 end
 dest_store.close
-scraper.close
+fetcher.close

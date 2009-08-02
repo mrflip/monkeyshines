@@ -5,8 +5,8 @@ $: << File.dirname(__FILE__)+'/../../lib'; $: << File.dirname(__FILE__)
 require 'monkeyshines'
 # require 'monkeyshines/utils/uri'
 # require 'monkeyshines/utils/filename_pattern'
-# require 'monkeyshines/scrape_store/conditional_store'
-# require 'monkeyshines/scrape_engine/http_head_scraper'
+# require 'monkeyshines/store/conditional_store'
+# require 'monkeyshines/fetcher/http_head_fetcher'
 # require 'trollop' # gem install trollop
 # require 'shorturl_request'
 require 'shorturl_sequence'

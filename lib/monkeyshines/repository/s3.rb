@@ -1,6 +1,6 @@
 require 'right_aws'
 module Monkeyshines
-  module ScrapeStore
+  module Store
 
     #
     # Large portions lifted from Thoughtbot's Paperclip gem.

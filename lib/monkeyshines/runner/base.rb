@@ -3,8 +3,8 @@ require 'yaml'
 require 'wukong'
 require 'monkeyshines/utils/uri'
 require 'monkeyshines/utils/filename_pattern'
-require 'monkeyshines/scrape_store/conditional_store'
-require 'monkeyshines/scrape_engine/http_head_scraper'
+require 'monkeyshines/store/conditional_store'
+require 'monkeyshines/fetcher/http_head_fetcher'
 module Monkeyshines
   module Runner
 
@@ -15,7 +15,7 @@ module Monkeyshines
       :src_skip          => nil,
 
       #
-      :scraper           => :http_scraper,
+      :fetcher           => :http_fetcher,
 
       #
       :dest_type         => :conditional_store,
@@ -27,7 +27,7 @@ module Monkeyshines
     }
 
     #
-    # A scraper
+    # A fetcher
     #
     # * loads ScrapeRequests from a request_src
     # *
@@ -67,7 +67,7 @@ module Monkeyshines
 
       # Source for requests
       def src_store
-        @src_store = Monkeyshines::ScrapeStore::FlatFileStore.new_from_command_line(opts, :filemode => 'r')
+        @src_store = Monkeyshines::Store::FlatFileStore.new_from_command_line(opts, :filemode => 'r')
         @src_store.skip!(opts[:skip].to_i) if opts[:skip]
       end
 
@@ -78,16 +78,16 @@ module Monkeyshines
       def dest_store
         return @dest_store if @dest_store
         # Track visited URLs with key-value database
-        @dest_cache = Monkeyshines::ScrapeStore::TyrantHdbKeyStore.new(opts[:cache_loc])
+        @dest_cache = Monkeyshines::Store::TyrantHdbKeyStore.new(opts[:cache_loc])
         # Store the data into flat files
         @dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern], :handle => opts[:handle], :dest_dir => opts[:dest_dir])
-        @dest_files   = Monkeyshines::ScrapeStore::ChunkedFlatFileStore.new(dest_pattern, opts[:chunk_time].to_i, opts)
+        @dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(dest_pattern, opts[:chunk_time].to_i, opts)
         # dest_store combines them
-        @dest_store = Monkeyshines::ScrapeStore::ConditionalStore.new(@dest_cache, @dest_files)
+        @dest_store = Monkeyshines::Store::ConditionalStore.new(@dest_cache, @dest_files)
       end
 
       def engine
-        @scraper ||= Monkeyshines::ScrapeEngine::HttpScraper.new opts[:twitter_api]
+        @fetcher ||= Monkeyshines::Fetcher::HttpFetcher.new opts[:twitter_api]
       end
 
       #
@@ -98,7 +98,7 @@ module Monkeyshines
         src_store.each do |req|
           # If url key is missing,
           result = dest_store.set(req.url) do
-            response = scraper.get(req)     # do the url fetch
+            response = fetcher.get(req)     # do the url fetch
             next unless response.healthy?   # don't store bad fetches
             [response.scraped_at, response] # timestamp into cache, result into flat file
           end
@@ -106,7 +106,7 @@ module Monkeyshines
         end
         src_store.close
         dest_store.close
-        scraper.close
+        fetcher.close
       end
 
     end
