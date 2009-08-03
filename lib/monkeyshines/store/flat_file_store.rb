@@ -9,8 +9,8 @@ module Monkeyshines
       #
       # +filename_root+  : first part of name for files
       #
-      def initialize filename, options={}
-        self.filename = filename or raise "Missing filename in #{self.class}"
+      def initialize options={}
+        self.filename = options[:filename] or raise "Missing filename in #{self.class}"
         self.filemode = options[:filemode] || 'a'
       end
 
@@ -64,21 +64,15 @@ module Monkeyshines
         file << obj.to_flat.join("\t")+"\n"
       end
 
+      def set obj, &block
+        save block.call
+      end
+
       # delegates to +#save+ -- writes the object to the file
       def <<(obj)
         save obj
       end
 
-      #
-      # take a hash of options:
-      #
-      #   --from
-      #   --filemode
-      #
-      def self.new_from_command_line cmdline_opts, default_opts={}
-        options = default_opts.merge(cmdline_opts)
-        self.new options[:from], options
-      end
     end
   end
 end

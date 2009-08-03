@@ -1,5 +1,6 @@
 module Monkeyshines
   module Store
+    extend FactoryModule
     autoload :Base,                 'monkeyshines/store/base'
     autoload :FlatFileStore,        'monkeyshines/store/flat_file_store'
     autoload :ChunkedFlatFileStore, 'monkeyshines/store/chunked_flat_file_store'
@@ -10,4 +11,3 @@ module Monkeyshines
     autoload :ReadThruStore,        'monkeyshines/store/read_thru_store'
   end
 end
-

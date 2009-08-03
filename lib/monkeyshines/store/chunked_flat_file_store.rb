@@ -3,12 +3,16 @@ module Monkeyshines
     class ChunkedFlatFileStore < Monkeyshines::Store::FlatFileStore
       attr_accessor :filename_pattern, :chunk_monitor
 
-      def initialize filename_pattern, time_interval=nil, *args
-        time_interval ||= 4*60*60 # default 4 hours
-        raise "You don't really want a chunk time this small: #{time_interval}" unless time_interval > 600
-        self.chunk_monitor    = Monkeyshines::Monitor::PeriodicMonitor.new(:time_interval => time_interval)
-        self.filename_pattern = filename_pattern
-        super filename_pattern.make(), *args
+      DEFAULT_OPTIONS = {
+        :time_interval     => 4*60*60, # default 4 hours
+      }
+
+      def initialize options
+        options = DEFAULT_OPTIONS.merge options
+        raise "You don't really want a chunk time this small: #{options[:time_interval]}" unless options[:time_interval] > 600
+        self.chunk_monitor    = Monkeyshines::Monitor::PeriodicMonitor.new(options.slice(:time_interval))
+        self.filename_pattern = options[:filename_pattern]
+        super options.merge(:filename => filename_pattern.make())
         self.mkdir!
       end
 

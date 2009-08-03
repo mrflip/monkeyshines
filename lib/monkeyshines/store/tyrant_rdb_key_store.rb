@@ -10,8 +10,7 @@ module Monkeyshines
 
       # pass in the filename or URI of a tokyo cabinet table-style DB
       # set create_db = true if you want to create a missing DB file
-      def initialize db_uri=nil, *args
-        db_uri ||= ':1978'
+      def initialize db_uri, *args
         self.db_host, self.db_port = db_uri.split(':')
         super *args
       end
@@ -19,7 +18,7 @@ module Monkeyshines
       def db
         return @db if @db
         @db ||= TokyoTyrant::RDB.new
-        @db.open(db_host, db_port) or raise("Can't open DB #{db_uri}. Pass in host:port, default is ':1978' #{@db.ecode}: #{@db.errmsg(@db.ecode)}")
+        @db.open(db_host, db_port) or raise("Can't open DB #{db_host}:#{db_port}. Pass in host:port' #{@db.ecode}: #{@db.errmsg(@db.ecode)}")
         @db
       end
 
