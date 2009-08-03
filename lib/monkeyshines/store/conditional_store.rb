@@ -11,9 +11,9 @@ module Monkeyshines
       #
       #
       #
-      def initialize cache, store
-        self.cache  = cache
-        self.store  = store
+      def initialize options
+        self.cache  = Monkeyshines::Store.new(options[:cache])
+        self.store  = Monkeyshines::Store.new(options[:cache])
         self.misses = 0
       end
 

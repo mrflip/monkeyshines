@@ -45,12 +45,17 @@ module FactoryModule
     base.class_eval do
 
       def self.new klass_name, *args
+
         FactoryModule.get_class(self, klass_name).new(*args)
       end
 
-      def self.from_hash options
-        klass_name = options[:type]
-        FactoryModule.get_class(self, klass_name).new(options) # from_hash
+      def self.from_hash plan
+        case
+        # when plan.class.ancestors.include? self
+        when plan.is_a?(Hash)
+          klass_name = plan[:type]
+          FactoryModule.get_class(self, klass_name).new(plan) # from_hash
+        end
       end
 
     end

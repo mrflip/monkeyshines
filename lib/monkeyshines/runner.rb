@@ -31,13 +31,21 @@ module Monkeyshines
     def initialize opts = {}
       self.options         = DEFAULT_OPTIONS.merge opts
       self.fetcher         = create(Monkeyshines::Fetcher, options[:fetcher])
-      self.src_store       = options[:src_store]
+      self.src_store       = create(Monkeyshines::Store, options[:src_store])
       self.request_stream  = options[:request_stream]
       self.dest_store      = create(Monkeyshines::Store, options[:dest_store])
     end
 
     def periodic_log
       @periodic_log ||= Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1, :time_interval => 30)
+    end
+
+    def request_stream
+      @request_stream ||= TwitterRequestStream.new TwitterUserRequest, src_store
+    end
+
+    def before_scrape
+      src_store.skip!(options[:skip].to_i) if options[:skip]
     end
 
     #
@@ -49,6 +57,7 @@ module Monkeyshines
     #
     def run
       Monkeyshines.logger.info "Beginning scrape itself"
+      before_scrape()
       request_stream.each do |req|
         # conditional store only calls fetcher if url key is missing.
         result = dest_store.set(req.url) do
