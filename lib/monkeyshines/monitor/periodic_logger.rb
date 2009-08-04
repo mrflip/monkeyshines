@@ -24,7 +24,7 @@ module Monkeyshines
       #
       def periodically &block
         super do
-          result = [ "%10d"%iter, "%7.1f"%since, "%7.1f"%rate, (block ? block.call : nil) ].flatten
+          result = [ "%10d"%iter, "%7.1f"%since, "%7.1f"%rate, (block ? block.call : nil) ].flatten.compact
           Monkeyshines.logger.info result.join("\t")
         end
       end

@@ -49,12 +49,13 @@ module FactoryModule
         FactoryModule.get_class(self, klass_name).new(*args)
       end
 
-      def self.from_hash plan
+      def self.create plan
         case
         # when plan.class.ancestors.include? self
         when plan.is_a?(Hash)
           klass_name = plan[:type]
           FactoryModule.get_class(self, klass_name).new(plan) # from_hash
+        else plan
         end
       end
 

@@ -8,11 +8,10 @@ module Monkeyshines
     class TyrantRdbKeyStore < Monkeyshines::Store::KeyStore
       attr_accessor :db_host, :db_port
 
-      # pass in the filename or URI of a tokyo cabinet table-style DB
-      # set create_db = true if you want to create a missing DB file
-      def initialize db_uri, *args
-        self.db_host, self.db_port = db_uri.split(':')
-        super *args
+      # pass in the host:port uri of the key store.
+      def initialize options
+        self.db_host, self.db_port = options[:uri].to_s.split(':')
+        super options
       end
 
       def db

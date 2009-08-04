@@ -12,8 +12,8 @@ module Monkeyshines
       #
       #
       def initialize options
-        self.cache  = Monkeyshines::Store.new(options[:cache])
-        self.store  = Monkeyshines::Store.new(options[:cache])
+        self.cache  = Monkeyshines::Store.create(options[:cache])
+        self.store  = Monkeyshines::Store.create(options[:store])
         self.misses = 0
       end
 
@@ -36,6 +36,10 @@ module Monkeyshines
       end
 
       def size() cache.size  end
+
+      def log_line
+        [size, "%8d misses"%misses]
+      end
 
       def close()
         cache.close

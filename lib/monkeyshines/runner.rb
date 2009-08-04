@@ -24,24 +24,15 @@ module Monkeyshines
       },
     }
 
-    def create factory, plan
-      (plan.is_a? Hash) ? factory.from_hash(plan) : plan
-    end
-
     def initialize opts = {}
       self.options         = DEFAULT_OPTIONS.merge opts
-      self.fetcher         = create(Monkeyshines::Fetcher, options[:fetcher])
-      self.src_store       = create(Monkeyshines::Store, options[:src_store])
-      self.request_stream  = options[:request_stream]
-      self.dest_store      = create(Monkeyshines::Store, options[:dest_store])
+      self.fetcher         = Monkeyshines::Fetcher.create(       options[:fetcher])
+      self.request_stream  = Monkeyshines::RequestStream.create( options[:request_stream])
+      self.dest_store      = Monkeyshines::Store.create(         options[:dest_store])
     end
 
     def periodic_log
       @periodic_log ||= Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1, :time_interval => 30)
-    end
-
-    def request_stream
-      @request_stream ||= TwitterRequestStream.new TwitterUserRequest, src_store
     end
 
     def before_scrape
@@ -66,7 +57,7 @@ module Monkeyshines
           [response.scraped_at, response]                         # timestamp into cache, result into flat file
         end
         periodic_log.periodically{ [
-            #"%7d"%dest_store.misses, 'misses', dest_store.size,
+            dest_store.log_line,
             req.response_code, result, req.url] }
       end
       dest_store.close

@@ -34,7 +34,7 @@ opts = Trollop::options do
   opt :from,           "URI for scrape store to load from",            :type => String
   opt :skip,           "Initial lines to skip",                        :type => Integer
   # output storage
-  opt :cache_loc,      "URI for cache server",                         :type => String, :default => ':1978'
+  opt :cache_uri,      "URI for cache server",                         :type => String, :default => ':1978'
   opt :chunk_time,     "Frequency to rotate chunk files (in seconds)", :type => Integer, :default => 60*60*4
   opt :dest_dir,       "Filename base to store output. default ./work/ripd", :default => WORK_DIR+'/ripd'
   opt :dest_pattern,   "Pattern for dump file output",                 :default => ":dest_dir/:date/:handle+:timestamp-:pid.tsv"
@@ -51,16 +51,16 @@ if (opts[:log])
   $stdout = $stderr = File.open(opts[:log]+"-console.log", "a")
 end
 
-#
-# ******************** Load from store ********************
-#
-class TwitterRequestStream < Monkeyshines::RequestStream::Base
-  def each *args
-    request_store.each(*args) do |twitter_user_id, *_|
-      yield TwitterUserRequest.new(twitter_user_id, 1, "" )
-    end
-  end
-end
+# #
+# # ******************** Load from store ********************
+# #
+# class TwitterRequestStream < Monkeyshines::RequestStream::Base
+#   def each *args
+#     request_store.each(*args) do |twitter_user_id, *_|
+#       yield TwitterUserRequest.new(twitter_user_id, 1, "" )
+#     end
+#   end
+# end
 
 #
 # Conditional store uses the key-value DB to boss around the flat files --
@@ -68,7 +68,7 @@ end
 # from the key-value store.
 #
 # Track visited URLs with key-value database
-dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(opts[:cache_loc])
+# dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(opts[:cache_loc])
 dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern], :handle => opts[:handle], :dest_dir => opts[:dest_dir])
 # Store the data into flat files
 # dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(dest_pattern, opts[:chunk_time].to_i, opts)
@@ -79,7 +79,10 @@ dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern], :ha
 # Execute the scrape
 #
 scraper = Monkeyshines::Runner.new(
-  :src_store      => { :type => :flat_file_store, :filemode => 'r', :filename => opts[:from], },
-  :dest_store     => { :type => :flat_file_store, :filename => opts[:into] }
+  :dest_store     => { :type => :conditional_store,
+    :cache => { :type => :tyrant_rdb_key_store, :uri => opts[:cache_uri] },
+    :store => { :type => :flat_file_store,      :filename => opts[:into] }, },
+  :request_stream => { :type => :base, :klass => Monkeyshines::ScrapeRequest,
+    :store => { :type => :flat_file_store, :filemode => 'r', :filename => opts[:from] } }
   )
 scraper.run

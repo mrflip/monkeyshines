@@ -20,7 +20,12 @@ module Monkeyshines
 
     # Checks that the response parses and has the right data structure.
     # if healthy? is true things should generally work
+    #
     def healthy?
+      (! url.blank?) && (           # has a URL and either:
+        scraped_at.blank?        || # hasn't been scraped,
+        (! response_code.blank?) || # or has, with response code
+        (! contents.blank?) )       # or has, with response
     end
 
     #

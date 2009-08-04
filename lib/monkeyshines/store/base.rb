@@ -11,11 +11,15 @@ module Monkeyshines
           begin
             item = klass.new *args[1..-1]
           rescue Exception => e
-            p [args, self, e.to_s]
+            Monkeyshines.logger.info [args, e.to_s, self].join("\t")
             raise e
           end
           yield item
         end
+      end
+
+      def log_line
+        nil
       end
 
     end
