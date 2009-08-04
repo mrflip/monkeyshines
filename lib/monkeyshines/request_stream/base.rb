@@ -1,6 +1,12 @@
 module Monkeyshines
   module RequestStream
 
+    #
+    # RequestStream::Base
+    #
+    # base just instantiates options[:klass] on each element of the
+    # options[:store]
+    #
     class Base
       attr_accessor :request_klass
       attr_accessor :request_store
@@ -14,14 +20,6 @@ module Monkeyshines
           yield request_klass.new(req_params)
         end
       end
-
-      # def self.new_from_command_line cmdline_opts, default_opts={}
-      #   options = default_opts.merge(cmdline_opts)
-      #   Trollop::die :from, "is required: location of scrape request stream" if options[:from].blank?
-      #   request_stream = Monkeyshines::FlatFileRequestStream.new(options[:from], options[:request_klass])
-      #   request_stream.skip! options[:skip] if options[:skip].to_i > 0
-      #   request_stream
-      # end
 
     end
   end

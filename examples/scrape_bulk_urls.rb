@@ -51,37 +51,14 @@ if (opts[:log])
   $stdout = $stderr = File.open(opts[:log]+"-console.log", "a")
 end
 
-# #
-# # ******************** Load from store ********************
-# #
-# class TwitterRequestStream < Monkeyshines::RequestStream::Base
-#   def each *args
-#     request_store.each(*args) do |twitter_user_id, *_|
-#       yield TwitterUserRequest.new(twitter_user_id, 1, "" )
-#     end
-#   end
-# end
-
-#
-# Conditional store uses the key-value DB to boss around the flat files --
-# requests are only made (and thus data is only output) if the url is missing
-# from the key-value store.
-#
-# Track visited URLs with key-value database
-# dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(opts[:cache_loc])
-dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern], :handle => opts[:handle], :dest_dir => opts[:dest_dir])
-# Store the data into flat files
-# dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(dest_pattern, opts[:chunk_time].to_i, opts)
-# conditional store off their combination
-# dest_store = Monkeyshines::Store::ConditionalStore.new(dest_cache, dest_files)
-
 #
 # Execute the scrape
 #
 scraper = Monkeyshines::Runner.new(
   :dest_store     => { :type => :conditional_store,
     :cache => { :type => :tyrant_rdb_key_store, :uri => opts[:cache_uri] },
-    :store => { :type => :flat_file_store,      :filename => opts[:into] }, },
+    :store => opts.merge({ :type => :chunked_flat_file_store }), },
+    # :store => { :type => :flat_file_store, :filename => opts[:into] }, },
   :request_stream => { :type => :base, :klass => Monkeyshines::ScrapeRequest,
     :store => { :type => :flat_file_store, :filemode => 'r', :filename => opts[:from] } }
   )
