@@ -1,6 +1,7 @@
 require 'trollop'
 require 'yaml'
 require 'wukong'
+require 'pathname'
 require 'monkeyshines/utils/uri'
 require 'monkeyshines/utils/filename_pattern'
 require 'monkeyshines/store/conditional_store'
@@ -39,6 +40,20 @@ module Monkeyshines
       src_store.skip!(options[:skip].to_i) if options[:skip]
     end
 
+    def log_line result
+      [ dest_store.log_line,
+        result.response_code, result.url, result.contents.to_s[0..80]]
+    end
+
+    def fetch_and_store req
+      # some stores (eg.conditional) only call fetcher if url key is missing.
+      dest_store.set(req.url) do
+        response = fetcher.get(req)       # do the url fetch
+        return unless response.healthy?     # don't store bad fetches
+        [response.scraped_at, response]   # timestamp into cache, result into flat file
+      end
+    end
+
     #
     # * For each entry in #src_store,
     # ** create scrape_request(s)
@@ -50,15 +65,9 @@ module Monkeyshines
       Monkeyshines.logger.info "Beginning scrape itself"
       before_scrape()
       request_stream.each do |req|
-        # conditional store only calls fetcher if url key is missing.
-        result = dest_store.set(req.url) do
-          response = fetcher.get(req)                             # do the url fetch
-          next unless response.healthy?                           # don't store bad fetches
-          [response.scraped_at, response]                         # timestamp into cache, result into flat file
-        end
-        periodic_log.periodically{ [
-            dest_store.log_line,
-            req.response_code, result, req.url] }
+        result = fetch_and_store(req)
+        periodic_log.periodically{ self.log_line(result) }
+        sleep 0.5
       end
       dest_store.close
       fetcher.close

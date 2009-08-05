@@ -9,7 +9,7 @@ require 'pathname'
 #
 require 'wuclan/domains/twitter'
 # un-namespace request classes.
-include Wuclan::Domains::Twitter::Scrape
+include Wuclan::Twitter::Scrape
 
 Monkeyshines::WORK_DIR = '/tmp'
 WORK_DIR = Pathname.new(Monkeyshines::WORK_DIR).realpath.to_s

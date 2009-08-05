@@ -62,10 +62,12 @@ module Monkeyshines
       # write to the file
       def save obj
         file << obj.to_flat.join("\t")+"\n"
+        obj
       end
 
-      def set obj, &block
-        save block.call
+      def set key, &block
+        tok, obj = block.call
+        save obj
       end
 
       # delegates to +#save+ -- writes the object to the file
