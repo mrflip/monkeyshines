@@ -5,20 +5,25 @@ require 'haml'
 require 'oauth'
 require 'monkeyshines'
 
-DOMAIN = :myspace_api
+DOMAIN = :twitter_api
 
 DOMAINS = {
   :myspace_api => {
     :site               => 'http://api.myspace.com',
-    :http_method        => :get,
     :request_token_path => "/request_token",
     :authorize_path     => "/authorize",
     :access_token_path  => "/access_token",
     :oauth_callback     => "http://monk3shines.com/ext/myspace/cb",
-  }
+  },
+  :twitter_api => {
+    :site               => 'http://twitter.com',
+    :request_token_path => '/oauth/request_token',
+    :authorize_path     => '/oauth/authenticate',
+    :access_token_path  => '/oauth/access_token',
+    # :oauth_callback     => "http://monk3shines.com/ext/twitter/cb",
+  },
 }
 
-puts "hi"
 #
 # OauthReflector -- sinatra frontend for Monkeyshines OAuth reflection
 #
@@ -27,7 +32,6 @@ puts "hi"
 # run with
 #   shotgun --port=12000 --server=thin ./oauth_reflector.rb
 #
-
 class OauthReflector < Sinatra::Base
   # Server setup
   helpers do include Rack::Utils ; alias_method :h, :escape_html ; end
@@ -52,6 +56,13 @@ class OauthReflector < Sinatra::Base
   # Front Page
   #
   get "/" do
+    haml :root
+  end
+
+  #
+  # Front Page
+  #
+  get "/foo" do
     # # haml :root
     out = ''
     @consumer = OAuth::Consumer.new(oauth_api_key, oauth_api_secret,
@@ -59,6 +70,9 @@ class OauthReflector < Sinatra::Base
       )
     out << inspection(@user, @@config, @consumer)
 
+    @request_token_foo = @consumer.create_signed_request(@consumer.http_method, @consumer.request_token_path, nil, DOMAINS[DOMAIN])
+    out << inspection(@request_token_foo)
+    out << inspection(@request_token_foo.to_hash)
     @request_token = @consumer.get_request_token
     out << inspection(@consumer, @request_token)
 
