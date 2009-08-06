@@ -1,0 +1,16 @@
+---
+  # environment:           production
+  # chdir:                 /slice/www/oauth_reflector/current
+  address:               127.0.0.1
+  port:                  12000
+  # user:                  www-data
+  # group:                 www-data
+  # pid:                   /slice/www/oauth_reflector/current/tmp/pids/thin.pid
+  # rackup:                /slice/www/oauth_reflector/current/config.ru
+  # log:                   /slice/www/oauth_reflector/shared/logs/thin.log
+  # max_conns:             1024
+  # timeout:               30
+  # max_persistent_conns:  512
+  # daemonize:             true
+
+# thin -s 2 -C config.yml -R config.ru start

@@ -1,0 +1,32 @@
+/* ===========================================================================
+   Default styling for the upload bar
+ */
+
+body { margin: 0px ; }
+
+.bar {
+  width:         300px;
+}
+#progress {
+  border:        1px solid #222;
+  display:       block;
+  float:         left;
+  margin-right:  0.25em;
+}
+#progressbar {
+  width:         0px;
+  height:        24px;
+}
+
+#progress                      { background:    #eee; }
+#progress         #progressbar { background:    #bbf; }
+#progress.working              { background:    #eef; }
+#progress.success #progressbar { background:    #cfd; }
+#progress.error                { background:    #fcc; }
+#progress.error   #progressbar { background:    #fcd; }
+
+iframe.yuploader {
+  border: 0px none white;
+  margin: 0px;
+  padding: 0px;
+}
