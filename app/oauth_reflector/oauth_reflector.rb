@@ -18,9 +18,9 @@ DOMAINS = {
   :twitter_api => {
     :site               => 'http://twitter.com',
     :request_token_path => '/oauth/request_token',
-    :authorize_path     => '/oauth/authenticate',
+    :authorize_path     => '/oauth/authorize',
     :access_token_path  => '/oauth/access_token',
-    # :oauth_callback     => "http://monk3shines.com/ext/twitter/cb",
+    :oauth_callback     => "http://monk3shines.com/ext/twitter/cb",
   },
 }
 
@@ -57,6 +57,10 @@ class OauthReflector < Sinatra::Base
   #
   get "/" do
     haml :root
+  end
+
+  get %r{ext/\w+/cb} do
+    "Gotcha."
   end
 
   #
