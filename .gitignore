@@ -12,6 +12,7 @@ nohup.out
 /**/log/*
 /**/cache/*
 /**/db/*.sqlite3
+tmp
 *DONTVERSION*
 config/*private*
 a.out
