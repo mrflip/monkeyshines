@@ -9,7 +9,7 @@ require 'monkeyshines'
 DOMAINS = {
   :myspace_api => {
     :site               => 'http://api.myspace.com',
-    :http_method        => :post,
+    :http_method        => :get,
     :request_token_path => "/request_token",
     :authorize_path     => "/authorize",
     :access_token_path  => "/access_token",
@@ -78,11 +78,16 @@ class OauthReflector < Sinatra::Base
     @domain = :myspace_api
     inspection DOMAINS[@domain]
     inspection consumer
-    @request_token = consumer.get_request_token(:oauth_callback => DOMAINS[@domain][:oauth_callback])
+    @request_token = consumer.get_request_token(:oauth_callback => CGI::escape(DOMAINS[@domain][:oauth_callback]))
     session[:request_token]        = @request_token.token
     session[:request_token_secret] = @request_token.secret
     inspection @request_token, @request_token.authorize_url
-    redirect @request_token.authorize_url
+    redirect @request_token.authorize_url(:oauth_callback => CGI::escape(DOMAINS[@domain][:oauth_callback]))
+  end
+
+  get '/ext/myspace/cb' do
+    @domain = :myspace_api
+    @access_token = consumer.get_access_token params[:request_token], DOMAINS[@domain]
   end
 
   get "/ext/twitter/auth" do
@@ -95,7 +100,7 @@ class OauthReflector < Sinatra::Base
 
   get '/ext/twitter/cb' do
     @domain = :twitter_api
-    @access_token = consumer.get_access_token params[:request_token], DOMAINS[DOMAIN]
+    @access_token = consumer.get_access_token params[:request_token], DOMAINS[@domain]
   end
 
   get %r{ext/\w+/cb} do
