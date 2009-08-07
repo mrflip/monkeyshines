@@ -4,7 +4,8 @@ require 'sinatra/base'
 require 'haml'
 require 'oauth'
 require 'monkeyshines'
-
+require 'json'
+require 'extlib/blank'
 
 DOMAINS = {
   :myspace_api => {
@@ -61,12 +62,20 @@ class OauthReflector < Sinatra::Base
   before do
     next if request.path_info =~ /ping$/
     @user = session[:user]
+    @domain = :myspace_api
+    @access_token = ::OAuth::AccessToken.new(consumer,
+      session[:access_token],
+      session[:access_token_secret]) if (session[:access_token] && session[:access_token_secret])
   end
 
   #
   # Front Page
   #
   get "/" do
+    @domain = :myspace_api
+    haml :root
+  end
+  get /^$/ do
     @domain = :myspace_api
     haml :root
   end
@@ -78,17 +87,37 @@ class OauthReflector < Sinatra::Base
     @domain = :myspace_api
     inspection DOMAINS[@domain]
     inspection consumer
-    @request_token = consumer.get_request_token(:oauth_callback => CGI::escape(DOMAINS[@domain][:oauth_callback]))
-    session[:request_token]        = @request_token.token
+    @request_token = consumer.get_request_token(:oauth_callback => DOMAINS[@domain][:oauth_callback])
     session[:request_token_secret] = @request_token.secret
+    session[:access_token]         = nil
+    session[:access_token_secret]  = nil
     inspection @request_token, @request_token.authorize_url
-    redirect @request_token.authorize_url(:oauth_callback => CGI::escape(DOMAINS[@domain][:oauth_callback]))
+    redirect @request_token.authorize_url(:oauth_callback => DOMAINS[@domain][:oauth_callback]+"?rts=#{@request_token.secret}")
   end
 
   get '/ext/myspace/cb' do
     @domain = :myspace_api
-    # @access_token = consumer.get_access_token params[:request_token], DOMAINS[@domain]
+    inspection '!!!!!!!!!!!SESSION!!!!!!!!!!!!!!!!!!!'
+    inspection session
+    inspection session[:request_token], session[:request_token_secret]
+    inspection '!!!!!!!!!!!SESSION!!!!!!!!!!!!!!!!!!!'
     inspection params
+    @request_token = ::OAuth::RequestToken.new(consumer,
+      CGI::unescape(params[:oauth_token]),
+      session[:request_token_secret])
+    inspection @request_token
+    @access_token = @request_token.get_access_token # , DOMAINS[@domain]
+    inspection @access_token
+    session[:request_token]        = nil
+    session[:request_token_secret] = nil
+    session[:access_token]         = @access_token.token
+    session[:access_token_secret]  = @access_token.secret
+    haml :cb
+  end
+
+  get %r{ext/\w+/open_social} do
+    @domain = :myspace_api
+    haml :open_social
   end
 
   get "/ext/twitter/auth" do
@@ -152,4 +181,10 @@ class OauthReflector < Sinatra::Base
     '<pre>'+h(str)+'</pre>'
   end
 
+
+  def request_json url
+    json_obj = @access_token.request(:get, url).body
+    return {:failed => "JSON response was blank"} if json_obj.blank?
+    objs = JSON.load(json_obj)
+  end
 end

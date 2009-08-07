@@ -1,0 +1,25 @@
+%table
+  %tr
+    %td  Consumer Key
+    %td=h  consumer.key
+  %tr
+    %td  Consumer Secret
+    %td=h  consumer.secret
+
+  %tr
+    %td  Request Token
+    %td=h  @request_token.token
+  %tr
+    %td  Request Token Secret
+    %td=h  @request_token.secret
+    
+  %tr
+    %td  Access Token
+    %td=h  @access_token.token
+  %tr
+    %td  Access Token Secret
+    %td=h  @access_token.secret
+      
+
+%p
+  == <a href="/ext/#{@domain}/opensocial">Show Stuff</a>
