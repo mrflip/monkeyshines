@@ -5,12 +5,11 @@ require 'haml'
 require 'oauth'
 require 'monkeyshines'
 
-DOMAIN = :friendster_api
-# DOMAIN = :twitter_api
 
 DOMAINS = {
   :myspace_api => {
     :site               => 'http://api.myspace.com',
+    :http_method        => :post,
     :request_token_path => "/request_token",
     :authorize_path     => "/authorize",
     :access_token_path  => "/access_token",
@@ -71,8 +70,34 @@ class OauthReflector < Sinatra::Base
     haml :root
   end
 
+  #
+  # Front Page
+  #
+  get "/ext/myspace/auth" do
+    @domain = :myspace_api
+    inspection DOMAINS[@domain]
+    inspection consumer
+    @request_token = consumer.get_request_token(:oauth_callback => DOMAINS[@domain][:oauth_callback])
+    session[:request_token]        = @request_token.token
+    session[:request_token_secret] = @request_token.secret
+    inspection @request_token, @request_token.authorize_url
+    redirect @request_token.authorize_url
+  end
+
+  get "/ext/twitter/auth" do
+    @domain = :twitter_api
+    @request_token = consumer.get_request_token(:oauth_callback => DOMAINS[@domain][:oauth_callback])
+    session[:request_token]        = @request_token.token
+    session[:request_token_secret] = @request_token.secret
+    redirect @request_token.authorize_url
+  end
+
+  get '/ext/twitter/cb' do
+    @access_token = consumer.get_access_token params[:request_token], DOMAINS[DOMAIN]
+  end
+
   get %r{ext/\w+/cb} do
-    "Gotcha."
+    "Gotcha: #{params.inspect}"
   end
 
   get %r{ext/\w+/install} do
@@ -82,34 +107,14 @@ class OauthReflector < Sinatra::Base
     "Pretend I'm uninstalled."
   end
 
-  #
-  # Front Page
-  #
-  get "/foo" do
-    # # haml :root
-    out = ''
-    @consumer = OAuth::Consumer.new(oauth_api_key, oauth_api_secret,
-      DOMAINS[DOMAIN]
-      )
-    out << inspection(@user, @@config, @consumer)
-
-    @request_token = @consumer.get_request_token
-    out << inspection(@consumer, @request_token)
-    session[:request_token]        = @request_token.token
-    session[:request_token_secret] = @request_token.secret
-    out << inspection(@request_token.authorize_url)
-    out
-    redirect @request_token.authorize_url
-  end
-
-  get %r{ext/\w+$} do
-    haml :auth
-  end
-
   private
 
+  def consumer
+    @consumer ||= OAuth::Consumer.new(oauth_api_key, oauth_api_secret, DOMAINS[@domain] )
+  end
+
   def config_val attr
-    @@config[DOMAIN][attr]
+    @@config[@domain][attr]
   end
 
   def oauth_api_key()      config_val(:api_key)    ; end
@@ -119,20 +124,19 @@ class OauthReflector < Sinatra::Base
   def authorize_path()     config_val(:authorize_path   )  ; end
   def access_token_path()  config_val(:access_token_path)  ; end
 
-  def nonce
-    Time.now.utc.to_f.to_s.gsub(/\D/, '')
-  end
-  def request_token_url
-    "#{oauth_site}#{request_token_path}?api_key=#{oauth_api_key}&format=json&nonce=#{nonce}"
-  end
-  def access_token_url(request_token)
-    "#{oauth_site}#{access_token_path}?api_key=#{oauth_api_key}&format=json&nonce=#{nonce}&auth_token=#{request_token}"
-  end
-  def authorize_url
-    base = (authorize_path =~ %r{^http://}) ? authorize_path : oauth_site+authorize_path
-    "#{base}?api_key=#{oauth_api_key}"
-  end
-
+  # def nonce
+  #   Time.now.utc.to_f.to_s.gsub(/\D/, '')
+  # end
+  # def request_token_url
+  #   "#{oauth_site}#{request_token_path}?api_key=#{oauth_api_key}&format=json&nonce=#{nonce}"
+  # end
+  # def access_token_url(request_token)
+  #   "#{oauth_site}#{access_token_path}?api_key=#{oauth_api_key}&format=json&nonce=#{nonce}&auth_token=#{request_token}"
+  # end
+  # def authorize_url
+  #   base = (authorize_path =~ %r{^http://}) ? authorize_path : oauth_site+authorize_path
+  #   "#{base}?api_key=#{oauth_api_key}"
+  # end
 
   def inspection *args
     str = args.map{|thing| thing.inspect }.join("\n")
