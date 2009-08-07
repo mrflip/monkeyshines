@@ -5,7 +5,8 @@ require 'haml'
 require 'oauth'
 require 'monkeyshines'
 
-DOMAIN = :twitter_api
+DOMAIN = :friendster_api
+# DOMAIN = :twitter_api
 
 DOMAINS = {
   :myspace_api => {
@@ -14,6 +15,14 @@ DOMAINS = {
     :authorize_path     => "/authorize",
     :access_token_path  => "/access_token",
     :oauth_callback     => "http://monk3shines.com/ext/myspace/cb",
+  },
+  :friendster_api => {
+    :site               => 'http://api.friendster.com',
+    :http_method        => :post,
+    :request_token_path => '/v1/token',
+    :authorize_path     => 'http://www.friendster.com/widget_login.php', # widget_login.php?api_key=....
+    :access_token_path  => '/v1/session',
+    :oauth_callback     => "http://monk3shines.com/ext/friendster/cb",
   },
   :twitter_api => {
     :site               => 'http://twitter.com',
@@ -44,6 +53,9 @@ class OauthReflector < Sinatra::Base
 
   configure do
     @@config = YAML.load_file(ENV['HOME']+"/.monkeyshines") rescue nil || {}
+    DOMAINS.each do |api, hsh|
+      @@config[api] = hsh.merge(@@config[api])
+    end
     Monkeyshines.logger.info "Loaded config file with #{@@config.length} things"
   end
 
@@ -63,6 +75,13 @@ class OauthReflector < Sinatra::Base
     "Gotcha."
   end
 
+  get %r{ext/\w+/install} do
+    "Pretend I'm installed."
+  end
+  get %r{ext/\w+/uninstall} do
+    "Pretend I'm uninstalled."
+  end
+
   #
   # Front Page
   #
@@ -74,29 +93,46 @@ class OauthReflector < Sinatra::Base
       )
     out << inspection(@user, @@config, @consumer)
 
-    @request_token_foo = @consumer.create_signed_request(@consumer.http_method, @consumer.request_token_path, nil, DOMAINS[DOMAIN])
-    out << inspection(@request_token_foo)
-    out << inspection(@request_token_foo.to_hash)
     @request_token = @consumer.get_request_token
     out << inspection(@consumer, @request_token)
-
-    session[:request_token] = @request_token
-    # redirect_to @request_token.authorize_url
+    session[:request_token]        = @request_token.token
+    session[:request_token_secret] = @request_token.secret
+    out << inspection(@request_token.authorize_url)
     out
+    redirect @request_token.authorize_url
   end
 
+  get %r{ext/\w+$} do
+    haml :auth
+  end
 
   private
 
-  def oauth_api_key
-    @@config[DOMAIN][:api_key]
+  def config_val attr
+    @@config[DOMAIN][attr]
   end
-  def oauth_api_secret
-    @@config[DOMAIN][:api_secret]
+
+  def oauth_api_key()      config_val(:api_key)    ; end
+  def oauth_api_secret()   config_val(:api_secret) ; end
+  def oauth_site()         config_val(:site)       ; end
+  def request_token_path() config_val(:request_token_path) ; end
+  def authorize_path()     config_val(:authorize_path   )  ; end
+  def access_token_path()  config_val(:access_token_path)  ; end
+
+  def nonce
+    Time.now.utc.to_f.to_s.gsub(/\D/, '')
   end
-  def oauth_site
-    DOMAINS[DOMAIN][:site]
+  def request_token_url
+    "#{oauth_site}#{request_token_path}?api_key=#{oauth_api_key}&format=json&nonce=#{nonce}"
   end
+  def access_token_url(request_token)
+    "#{oauth_site}#{access_token_path}?api_key=#{oauth_api_key}&format=json&nonce=#{nonce}&auth_token=#{request_token}"
+  end
+  def authorize_url
+    base = (authorize_path =~ %r{^http://}) ? authorize_path : oauth_site+authorize_path
+    "#{base}?api_key=#{oauth_api_key}"
+  end
+
 
   def inspection *args
     str = args.map{|thing| thing.inspect }.join("\n")

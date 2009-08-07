@@ -1,0 +1,12 @@
+
+%table
+  %tr
+    %td
+      %form{ :action => request_token_url, :method => :post }
+        %input{ :type => :submit }
+    %td
+      =h  @request_token
+
+  %tr
+    %td
+      == <a href="#{authorize_url}">#{authorize_url}</a>
