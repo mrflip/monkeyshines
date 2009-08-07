@@ -53,7 +53,7 @@ class OauthReflector < Sinatra::Base
   configure do
     @@config = YAML.load_file(ENV['HOME']+"/.monkeyshines") rescue nil || {}
     DOMAINS.each do |api, hsh|
-      @@config[api] = hsh.merge(@@config[api])
+      @@config[api] = hsh.merge(@@config[api]) if @@config[api]
     end
     Monkeyshines.logger.info "Loaded config file with #{@@config.length} things"
   end
@@ -94,6 +94,7 @@ class OauthReflector < Sinatra::Base
   end
 
   get '/ext/twitter/cb' do
+    @domain = :twitter_api
     @access_token = consumer.get_access_token params[:request_token], DOMAINS[DOMAIN]
   end
 
