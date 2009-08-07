@@ -87,7 +87,8 @@ class OauthReflector < Sinatra::Base
 
   get '/ext/myspace/cb' do
     @domain = :myspace_api
-    @access_token = consumer.get_access_token params[:request_token], DOMAINS[@domain]
+    # @access_token = consumer.get_access_token params[:request_token], DOMAINS[@domain]
+    inspection params
   end
 
   get "/ext/twitter/auth" do
