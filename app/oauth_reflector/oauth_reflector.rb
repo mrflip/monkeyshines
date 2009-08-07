@@ -67,6 +67,7 @@ class OauthReflector < Sinatra::Base
   # Front Page
   #
   get "/" do
+    @domain = :myspace_api
     haml :root
   end
 
