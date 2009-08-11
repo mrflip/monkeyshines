@@ -5,10 +5,10 @@
     %td
       %pre=h @myself.inspect
 
-  %tr
-    %td Show Friends
-    %td
-      %pre=h request_json('/v2/people/@me/@friends?format=json&count=100&startIndex=0').inspect
+  -# %tr
+  -#   %td Show Friends
+  -#   %td
+  -#     %pre=h request_json('/v2/people/@me/@friends?format=json&count=100&startIndex=0').inspect
 
   %tr
     %td Show Activity
@@ -20,39 +20,43 @@
     %td
       %pre=h request_json('/v2/activities/@me/@friends?format=json').inspect
 
--#   %tr
--#     %td Show User v1 full
--#     %td
--#       %pre=h request_json('/v1/users/5643744/profile.json?detailtype=full').keys.sort.inspect
--#   
--#   %tr
--#     %td Show User v1 basic
--#     %td
--#       %pre=h request_json('/v1/users/5643744/profile.json?detailtype=extended').keys.sort.inspect
--#   
--#   %tr
--#     %td Show Activities v1
--#     %td
--#       %pre=h @access_token.request(:get, '/v1/users/5643744/friends/activities.atom?page_size=1000&extensions=All').body
--#
--# %table
--#   %tr
--#   %td Show Friends More
--#   %td
--#     -request_json('/v1/users/5643744/friends.json?page=1&page_size=all&show=online%7Cstatus%7Cmood')['Friends'].each do |friend|
--#       %tr
--#         - friend.keys.sort.each do |attr|
--#           %td=h attr
--# 
--# %table
--#   %tr
--#   %td Show Status v1
--#   %td
--#     - request_json('/v1/users/5643744/friends/status.json')['FriendsStatus'].each do |friend|
--#       %tr
--#         - (friend.keys + friend['user'].keys).sort.each do |attr|
--#           %td=h attr
--# 
+  %tr
+    %td Show User v1 full
+    %td
+      %pre=h request_json('/v1/users/5643744/profile.json?detailtype=full').keys.sort.inspect
+  
+  %tr
+    %td Show User v1 basic
+    %td
+      %pre=h request_json('/v1/users/5643744/profile.json?detailtype=extended').keys.sort.inspect
+  
+  %tr
+    %td Show Activities v1
+    %td
+      %pre=h @access_token.request(:get, '/v1/users/5643744/friends/activities.atom?page_size=1000&extensions=All').body
+
+%table
+  %tr
+  %td Show Friends More
+  %td
+    -request_json('/v1/users/5643744/friends.json?page=1&page_size=all&show=online%7Cstatus%7Cmood')['Friends'].each do |friend|
+      %tr
+        - friend.keys.sort.each do |attr|
+          %td=h attr
+
+%table
+  %tr
+  %td Show Status v1
+  %td
+    - request_json('/v1/users/5643744/friends/status.json')['FriendsStatus'].each do |friend|
+      %tr
+        - friend.each do |attr, val|
+          %td=h attr
+          %td=h val
+      -# %tr
+      -#   - (friend.keys + friend['user'].keys).sort.each do |attr|
+      -#     %td=h attr
+
 -# %table
 -#   %tr
 -#     %th Friends

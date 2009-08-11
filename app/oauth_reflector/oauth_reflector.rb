@@ -81,7 +81,7 @@ class OauthReflector < Sinatra::Base
   end
 
   #
-  # Front Page
+  # Myspace
   #
   get "/ext/myspace/auth" do
     @domain = :myspace_api
@@ -115,11 +115,9 @@ class OauthReflector < Sinatra::Base
     haml :cb
   end
 
-  get %r{ext/\w+/open_social} do
-    @domain = :myspace_api
-    haml :open_social
-  end
-
+  #
+  # Facebook
+  #
   get "/ext/twitter/auth" do
     @domain = :twitter_api
     @request_token = consumer.get_request_token(:oauth_callback => DOMAINS[@domain][:oauth_callback])
@@ -137,12 +135,35 @@ class OauthReflector < Sinatra::Base
     "Gotcha: #{params.inspect}"
   end
 
+  get %r{ext/\w+/open_social} do
+    @domain = :myspace_api
+    haml :open_social
+  end
+
   get %r{ext/\w+/install} do
     "Pretend I'm installed."
   end
   get %r{ext/\w+/uninstall} do
     "Pretend I'm uninstalled."
   end
+
+
+  get '/help' do
+    %Q{Please email help@monk3shines.com for help}
+  end
+  get '/privacy' do
+    %Q{Monk3shines only uses information that is either public or made open to the person running the app.
+       Data is cleared after a fixed time, according to each sites\' caching policy.
+       For further questions, please contact info@monk3shines.com.
+       }
+  end
+  get '/tos' do
+    %Q{Monk3shines is currently only available for bespoke clients.
+       For further questions, please contact info@monk3shines.com.
+       }
+  end
+
+
 
   private
 
