@@ -88,10 +88,12 @@ class OauthReflector < Sinatra::Base
     inspection DOMAINS[@domain]
     inspection consumer
     @request_token = consumer.get_request_token(:oauth_callback => DOMAINS[@domain][:oauth_callback])
+    session[:request_token]        = @request_token.token
     session[:request_token_secret] = @request_token.secret
     session[:access_token]         = nil
     session[:access_token_secret]  = nil
     inspection @request_token, @request_token.authorize_url
+    inspection session[:request_token], session[:request_token_secret]
     redirect @request_token.authorize_url(:oauth_callback => DOMAINS[@domain][:oauth_callback]+"?rts=#{@request_token.secret}")
   end
 
@@ -99,12 +101,12 @@ class OauthReflector < Sinatra::Base
     @domain = :myspace_api
     inspection '!!!!!!!!!!!SESSION!!!!!!!!!!!!!!!!!!!'
     inspection session
-    inspection session[:request_token], session[:request_token_secret]
+    inspection session[:request_token], session[:request_token_secret], CGI::unescape(params[:oauth_token]), params[:rts]
     inspection '!!!!!!!!!!!SESSION!!!!!!!!!!!!!!!!!!!'
     inspection params
     @request_token = ::OAuth::RequestToken.new(consumer,
       CGI::unescape(params[:oauth_token]),
-      session[:request_token_secret])
+      params[:rts])
     inspection @request_token
     @access_token = @request_token.get_access_token # , DOMAINS[@domain]
     inspection @access_token

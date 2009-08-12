@@ -1,69 +1,69 @@
 - @myself = request_json('/v2/people/@me/@self?format=json')
+- @my_id  = @myself['entry']['id'].gsub(/myspace.com:/,"") rescue nil
 %table
   %tr
     %td== <a href="#{@myself['entry']['profileUrl']}">Show User</a>
     %td
-      %pre=h @myself.inspect
-
-  -# %tr
-  -#   %td Show Friends
-  -#   %td
-  -#     %pre=h request_json('/v2/people/@me/@friends?format=json&count=100&startIndex=0').inspect
+      %pre=h @myself.inspect.gsub(/,/, ",\n\t")
 
   %tr
-    %td Show Activity
+    %td Show Friends
     %td
-      %pre=h request_json('/v2/activities/@me/@self?format=json').inspect
+      %pre=h request_json('/v2/people/@me/@friends?format=json&count=100&startIndex=0').inspect.gsub(/,/, ",\n\t")
 
   %tr
     %td Show Activity
     %td
-      %pre=h request_json('/v2/activities/@me/@friends?format=json').inspect
+      %pre=h request_json('/v2/activities/@me/@self?format=json').inspect.gsub(/,/, ",\n\t")
 
   %tr
-    %td Show User v1 full
+    %td Show Activity
     %td
-      %pre=h request_json('/v1/users/5643744/profile.json?detailtype=full').keys.sort.inspect
-  
-  %tr
-    %td Show User v1 basic
-    %td
-      %pre=h request_json('/v1/users/5643744/profile.json?detailtype=extended').keys.sort.inspect
-  
-  %tr
-    %td Show Activities v1
-    %td
-      %pre=h @access_token.request(:get, '/v1/users/5643744/friends/activities.atom?page_size=1000&extensions=All').body
+      %pre=h request_json('/v2/activities/@me/@friends?format=json').inspect.gsub(/,/, ",\n\t")
 
-%table
-  %tr
-  %td Show Friends More
-  %td
-    -request_json('/v1/users/5643744/friends.json?page=1&page_size=all&show=online%7Cstatus%7Cmood')['Friends'].each do |friend|
-      %tr
-        - friend.keys.sort.each do |attr|
-          %td=h attr
+-#   %tr
+-#     %td Show User v1 full
+-#     %td
+-#       %pre=h request_json("/v1/users/#{@my_id}/profile.json?detailtype=full").keys.sort.inspect
+-#   
+-#   %tr
+-#     %td Show User v1 basic
+-#     %td
+-#       %pre=h request_json("/v1/users/#{@my_id}/profile.json?detailtype=extended").keys.sort.inspect
+-#   
+-#   %tr
+-#     %td Show Activities v1
+-#     %td
+-#       %pre=h @access_token.request(:get, "/v1/users/#{@my_id}/friends/activities.atom?page_size=1000&extensions=All").body
+-# 
+-# %table
+-#   %tr
+-#   %td Show Friends More
+-#   %td
+-#     -request_json("/v1/users/#{@my_id}/friends.json?page=1&page_size=all&show=online%7Cstatus%7Cmood")["Friends"].each do |friend|
+-#       %tr
+-#         - friend.keys.sort.each do |attr|
+-#           %td=h attr
 
 %table
   %tr
   %td Show Status v1
   %td
-    - request_json('/v1/users/5643744/friends/status.json')['FriendsStatus'].each do |friend|
+    - request_json("/v1/users/#{@my_id}/friends/status.json")["FriendsStatus"].each do |friend|
       %tr
         - friend.each do |attr, val|
-          %td=h attr
           %td=h val
       -# %tr
-      -#   - (friend.keys + friend['user'].keys).sort.each do |attr|
+      -#   - (friend.keys + friend["user"].keys).sort.each do |attr|
       -#     %td=h attr
 
 -# %table
 -#   %tr
 -#     %th Friends
--#   - request_json('/v2/people/@me/@friends?format=json&count=100&startIndex=0')['FriendsStatus'].each do |friend|
+-#   - request_json("/v2/people/@me/@friends?format=json&count=100&startIndex=0")["FriendsStatus"].each do |friend|
 -#     %tr
--#       %td=h friend['nickname']
--#       %td=h friend['id']
--#       %td=h friend['profileUrl']  
--#       %td=h friend['hasAppInstalled']
--#       %td=h friend['thumbnailUrl']
+-#       %td=h friend["nickname"]
+-#       %td=h friend["id"]
+-#       %td=h friend["profileUrl"]  
+-#       %td=h friend["hasAppInstalled"]
+-#       %td=h friend["thumbnailUrl"]

@@ -1,0 +1,16 @@
+%h1
+  Collection status for #{@user.name rescue 'none'}
+
+%ul
+  %li <a href="http://www.facebook.com/apps/application.php?id=124837221162">Manage this app</a>
+  %li <a href="http://monk3shines.com/facebook/uninstall">Uninstall</a>
+  
+%ul
+  %li
+    %pre
+      -         query, sig_str, params, sig = signage({:method=>"facebook.Users.getInfo", :uids => "500562576,7947892,77218166406,421383", :fields => "name,pic_square,birthday,hometown_location,current_location"})
+      =h        [sig_str, query, params, sig].inspect
+      =h        RestClient.post("http://api.facebook.com/restserver.php", params).gsub(/,/, ",\n\t")
+      -#         query, sig_str, params, sig = signage({:method=>"facebook.Friends.get", :uid => 7947892}) # 500562576
+      =#h        RestClient.post("http://api.facebook.com/restserver.php", params).gsub(/,/, ",\n\t") rescue nil
+      =h        session[:facebook_session].inspect.gsub(/,/, ",\n\t")
