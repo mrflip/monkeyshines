@@ -48,7 +48,7 @@ handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
 # ******************** Log ********************
 opts[:log] = (WORK_DIR+"/log/shorturls_#{handle}-#{Time.now.to_flat}.log") if (opts[:log]=='')
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 10000, :time_interval => 30)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 10000, :time => 30)
 
 #
 # ******************** Load from store or random walk ********************

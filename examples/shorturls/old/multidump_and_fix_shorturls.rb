@@ -37,7 +37,7 @@ dests = { }
 end
 
 # ******************** Log ********************
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 20_000, :time_interval => 30)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 20_000, :time => 30)
 
 # ******************** Cross Load ********************
 # Read , process, dump

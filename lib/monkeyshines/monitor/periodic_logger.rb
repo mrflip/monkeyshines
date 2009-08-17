@@ -16,7 +16,7 @@ module Monkeyshines
       #
       # Ex: log if it has been at least 5 minutes since last announcement:
       #
-      #   periodic_logger = Monkeyshines::Monitor::PeriodicLogger.new(:time_interval => 300)
+      #   periodic_logger = Monkeyshines::Monitor::PeriodicLogger.new(:time => 300)
       #   loop do
       #     # ... stuff ...
       #     periodic_logger.periodically{ [morbenfactor, crunkosity, exuberance] }

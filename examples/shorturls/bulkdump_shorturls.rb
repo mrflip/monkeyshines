@@ -22,7 +22,7 @@ end
 
 # ******************** Log ********************
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 20_000, :time_interval => 30)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 20_000, :time => 30)
 
 # ******************** Read From ********************
 TYRANT_PORTS = { 'tinyurl' => ":10001", 'bitly' => ":10002", 'other' => ":10003" }

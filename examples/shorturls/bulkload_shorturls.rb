@@ -20,7 +20,7 @@ Trollop::die :from_type unless opts[:from_type]
 
 # ******************** Log ********************
 Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 20_000, :time_interval => 30)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 20_000, :time => 30)
 
 # ******************** Load from flat file ********************
 src_store_klass = Wukong.class_from_resource('Monkeyshines::Store::'+opts[:from_type])
