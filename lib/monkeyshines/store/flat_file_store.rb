@@ -20,6 +20,7 @@ module Monkeyshines
       #
       def each &block
         file.each do |line|
+          next if line[0..0] == '#'
           attrs = line.chomp.split("\t")
           next if attrs.blank?
           yield *attrs

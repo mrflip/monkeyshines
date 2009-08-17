@@ -4,6 +4,8 @@ module Monkeyshines
   # Base class for Scrape requests
   #
   module ScrapeRequestCore
+    autoload :SignedUrl, 'monkeyshines/scrape_request/signed_url'
+
     #
     def healthy?
       (! url.blank?) && (           # has a URL and either:
@@ -22,6 +24,12 @@ module Monkeyshines
     def response= response
       return unless response
       self.contents = response.body.chomp.gsub(/[\r\n\t]/){|c| BAD_CHARS[c]}
+    end
+
+    def url_encode str
+      return '' if str.blank?
+      str = str.gsub(/ /, '+')
+      Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
     end
   end
 

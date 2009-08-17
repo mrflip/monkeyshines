@@ -18,11 +18,11 @@ module Monkeyshines
     attr_accessor :sleep_time
 
     DEFAULT_OPTIONS = {
-      :source  => { :type => :simple_request_stream, },
-      :dest    => { :type => :flat_file_store, :filemode => 'w'},
-      :fetcher => { :type => :http_fetcher,     },
-      :log     => { :dest => nil, :iters => 100, :time => 30 },
-      :skip    => nil,
+      :source     => { :type => :simple_request_stream, },
+      :dest       => { :type => :flat_file_store, :filemode => 'w'},
+      :fetcher    => { :type => :http_fetcher,     },
+      :log        => { :dest => nil, :iters => 100, :time => 30 },
+      :skip       => nil,
       :sleep_time => 0.5
     }
 
@@ -52,16 +52,16 @@ module Monkeyshines
     end
 
     def log_line result
-      [ dest.log_line,
-        result.response_code, result.url, result.contents.to_s[0..80]]
+      result_log_line = result.blank? ? ['-','-','-'] : [result.response_code, result.url, result.contents.to_s[0..80]]
+      [ dest.log_line, result_log_line ].flatten
     end
 
     def fetch_and_store req
       # some stores (eg.conditional) only call fetcher if url key is missing.
       dest.set(req.url) do
         response = fetcher.get(req)       # do the url fetch
-        return unless response.healthy?     # don't store bad fetches
-        [response.scraped_at, response]   # timestamp into cache, result into flat file
+        return unless response.healthy?   # don't store bad fetches
+        [response.scraped_at, response]   # timestamp for bookkeeper, result for dest
       end
     end
 

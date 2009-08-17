@@ -17,7 +17,7 @@ module Monkeyshines
     # on or after 20_000 iteration or 550s, whichever happens first.
     #
     class PeriodicMonitor
-      attr_accessor :time, :iters
+      attr_accessor :time_interval, :iter_interval
       attr_accessor :last_time, :iter, :started_at
 
       def initialize options={}
@@ -25,7 +25,7 @@ module Monkeyshines
         self.last_time     = started_at
         self.iter          = 0
         self.time_interval = options[:time]
-        self.iter_interval = options[:iter]
+        self.iter_interval = options[:iters]
       end
 
       # True if more than +iter_interval+ has elapsed since last execution.

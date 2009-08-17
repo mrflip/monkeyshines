@@ -24,7 +24,7 @@ module Monkeyshines
       # amount to throttle non-persistent connections.
       CNXN_SLEEP_TIME = 0.5
       # Default user agent presented to servers
-      USER_AGENT = "Monkeyshines v0.1"
+      USER_AGENT = "Net::HTTP #{RUBY_VERSION}"
       attr_accessor :connection_opened_at, :username, :password, :http_req_options, :options
 
       def initialize options={}

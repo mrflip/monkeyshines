@@ -1,8 +1,10 @@
 module Monkeyshines
   module Store
     class Base
-      def initialize options={}
-        Monkeyshines.logger.info "Opening #{self.class.to_s}"
+      attr_accessor :options
+      def initialize _options={}
+        self.options = _options
+        Monkeyshines.logger.info "Creating #{self.class}"
       end
 
       #

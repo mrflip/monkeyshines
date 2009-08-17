@@ -8,12 +8,12 @@ module Monkeyshines
     class KlassRequestStream < Base
       attr_accessor :request_store
       attr_accessor :klass_scope
-      SimpleRequestStream::DEFAULT_OPTIONS = {
+      KlassRequestStream::DEFAULT_OPTIONS = {
         :store       => { :type => :flat_file_store },
         :klass_scope => Kernel,
       }
       def initialize _options={}
-        super SimpleRequestStream::DEFAULT_OPTIONS.merge(_options)
+        super KlassRequestStream::DEFAULT_OPTIONS.merge(_options)
         self.request_store = Monkeyshines::Store.create(options.merge(options[:store]))
         self.klass_scope   = options[:klass_scope]
       end

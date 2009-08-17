@@ -9,7 +9,7 @@ module Monkeyshines
       attr_accessor :options
       Base::DEFAULT_OPTIONS = {}
       def initialize _options={}
-        self.options = Base::DEFAULT_OPTIONS.merge(_options)
+        self.options = Base::DEFAULT_OPTIONS.deep_merge(_options)
         Monkeyshines.logger.debug "New #{self.class} as #{options.inspect}"
       end
 
@@ -18,7 +18,6 @@ module Monkeyshines
           yield request_from_raw(*raw_req_args)
         end
       end
-
     end
   end
 end
