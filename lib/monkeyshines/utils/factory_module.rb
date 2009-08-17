@@ -40,12 +40,10 @@
 #
 #
 module FactoryModule
-
   def self.extended base
     base.class_eval do
 
       def self.new klass_name, *args
-
         FactoryModule.get_class(self, klass_name).new(*args)
       end
 
@@ -54,11 +52,13 @@ module FactoryModule
         # when plan.class.ancestors.include? self
         when plan.is_a?(Hash)
           klass_name = plan[:type]
-          FactoryModule.get_class(self, klass_name).new(plan) # from_hash
+          FactoryModule.get_class(self, klass_name).new(plan)
+        when plan.is_a?(Symbol)
+          klass_name = plan
+          FactoryModule.get_class(self, klass_name).new()
         else plan
         end
       end
-
     end
   end
 

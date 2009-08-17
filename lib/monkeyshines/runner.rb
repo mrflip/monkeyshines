@@ -1,53 +1,64 @@
 require 'trollop'
 require 'yaml'
 require 'wukong'
-require 'pathname'
+require "wukong/extensions/pathname"
 require 'monkeyshines/utils/uri'
 require 'monkeyshines/utils/filename_pattern'
-require 'monkeyshines/store/conditional_store'
-require 'monkeyshines/fetcher/http_head_fetcher'
+require 'monkeyshines/options'
+require 'monkeyshines/scrape_request'
 
 module Monkeyshines
   class Runner
     attr_accessor :options
-    attr_accessor :src_store
+    attr_accessor :source
     attr_accessor :request_stream
     attr_accessor :fetcher
-    attr_accessor :dest_store
+    attr_accessor :dest
     attr_accessor :periodic_log
+    attr_accessor :sleep_time
 
     DEFAULT_OPTIONS = {
-      :src_store    => {
-        :type => :flat_file_store,
-      },
-      :fetcher      => {
-        :type => :http_fetcher,
-      },
+      :source  => { :type => :simple_request_stream, },
+      :dest    => { :type => :flat_file_store, :filemode => 'w'},
+      :fetcher => { :type => :http_fetcher,     },
+      :log     => { :dest => nil, :iters => 100, :time => 30 },
+      :skip    => nil,
+      :sleep_time => 0.5
     }
 
-    def initialize opts = {}
-      self.options         = DEFAULT_OPTIONS.merge opts
-      self.fetcher         = Monkeyshines::Fetcher.create(       options[:fetcher])
-      self.request_stream  = Monkeyshines::RequestStream.create( options[:request_stream])
-      self.dest_store      = Monkeyshines::Store.create(         options[:dest_store])
+    def initialize *options_hashes
+      self.options = Hash.deep_sum(
+        Monkeyshines::Runner::DEFAULT_OPTIONS,
+        Monkeyshines::CONFIG,
+        Monkeyshines::Options.options_from_cmdline,
+        *options_hashes
+        )
+      self.fetcher = Monkeyshines::Fetcher.create(       options[:fetcher])
+      self.source  = Monkeyshines::RequestStream.create( options[:source])
+      self.dest    = Monkeyshines::Store.create(         options[:dest])
+      self.sleep_time = options[:sleep_time]
+    end
+
+    def request_from_raw *raw_req_args
+      Monkeyshines::ScrapeRequest.new(*raw_req_args)
     end
 
     def periodic_log
-      @periodic_log ||= Monkeyshines::Monitor::PeriodicLogger.new(:iter_interval => 1, :time_interval => 30)
+      @periodic_log ||= Monkeyshines::Monitor::PeriodicLogger.new(options[:log])
     end
 
     def before_scrape
-      src_store.skip!(options[:skip].to_i) if options[:skip]
+      source.skip!(options[:skip].to_i) if options[:skip]
     end
 
     def log_line result
-      [ dest_store.log_line,
+      [ dest.log_line,
         result.response_code, result.url, result.contents.to_s[0..80]]
     end
 
     def fetch_and_store req
       # some stores (eg.conditional) only call fetcher if url key is missing.
-      dest_store.set(req.url) do
+      dest.set(req.url) do
         response = fetcher.get(req)       # do the url fetch
         return unless response.healthy?     # don't store bad fetches
         [response.scraped_at, response]   # timestamp into cache, result into flat file
@@ -55,7 +66,7 @@ module Monkeyshines
     end
 
     #
-    # * For each entry in #src_store,
+    # * For each entry in #source,
     # ** create scrape_request(s)
     # ** fetch request (...if appropriate)
     # ** store result (...if fetch was successful)
@@ -64,12 +75,13 @@ module Monkeyshines
     def run
       Monkeyshines.logger.info "Beginning scrape itself"
       before_scrape()
-      request_stream.each do |req|
+      source.each do |req|
+        next unless req
         result = fetch_and_store(req)
         periodic_log.periodically{ self.log_line(result) }
-        sleep 0.5
+        sleep sleep_time
       end
-      dest_store.close
+      dest.close
       fetcher.close
     end
 

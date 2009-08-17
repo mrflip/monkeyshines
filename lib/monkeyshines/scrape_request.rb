@@ -38,4 +38,17 @@ module Monkeyshines
     include ScrapeRequestCore
   end
 
+  #
+  # A SimpleRequest just holds a URL and the fetch result.
+  #
+  class SimpleRequest < TypedStruct.new(
+    [:url,              String],
+    [:scraped_at,       Bignum],
+    [:response_code,    Integer],
+    [:response_message, String],
+    [:contents,         String]
+    )
+    include ScrapeRequestCore
+  end
+
 end

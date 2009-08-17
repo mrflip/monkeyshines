@@ -4,24 +4,18 @@ module Monkeyshines
     #
     # RequestStream::Base
     #
-    # base just instantiates options[:klass] on each element of the
-    # options[:store]
     #
     class Base
       attr_accessor :options
-      attr_accessor :request_store
-      def initialize options={}
-        self.options       = options
-        self.request_store = Monkeyshines::Store.create(options[:store])
-      end
-
-      def request_for_params *params
-        options[:klass].new(params)
+      Base::DEFAULT_OPTIONS = {}
+      def initialize _options={}
+        self.options = Base::DEFAULT_OPTIONS.merge(_options)
+        Monkeyshines.logger.debug "New #{self.class} as #{options.inspect}"
       end
 
       def each *args, &block
-        self.request_store.each(*args) do |*params|
-          yield request_for_params(*params)
+        self.request_store.each(*args) do |*raw_req_args|
+          yield request_from_raw(*raw_req_args)
         end
       end
 

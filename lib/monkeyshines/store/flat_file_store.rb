@@ -10,8 +10,9 @@ module Monkeyshines
       # +filename_root+  : first part of name for files
       #
       def initialize options={}
+        Monkeyshines.logger.debug "New #{self.class} as #{options.inspect}"
         self.filename = options[:filename] or raise "Missing filename in #{self.class}"
-        self.filemode = options[:filemode] || 'a'
+        self.filemode = options[:filemode] || 'r'
       end
 
       #
