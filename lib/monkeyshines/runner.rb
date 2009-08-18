@@ -1,11 +1,4 @@
-require 'trollop'
 require 'yaml'
-require 'wukong'
-require "wukong/extensions/pathname"
-require 'monkeyshines/utils/uri'
-require 'monkeyshines/utils/filename_pattern'
-require 'monkeyshines/options'
-require 'monkeyshines/scrape_request'
 
 module Monkeyshines
   class Runner
@@ -65,6 +58,10 @@ module Monkeyshines
       end
     end
 
+    def bookkeep result
+      periodic_log.periodically{ self.log_line(result) }
+    end
+
     #
     # * For each entry in #source,
     # ** create scrape_request(s)
@@ -78,7 +75,7 @@ module Monkeyshines
       source.each do |req|
         next unless req
         result = fetch_and_store(req)
-        periodic_log.periodically{ self.log_line(result) }
+        bookkeep result
         sleep sleep_time
       end
       dest.close

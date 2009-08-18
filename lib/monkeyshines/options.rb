@@ -1,3 +1,4 @@
+require 'trollop'
 module Monkeyshines
   module Options
 
@@ -8,8 +9,8 @@ module Monkeyshines
         # opt :dest_cache_uri,  "URI for cache server",              :type => String
       end
     end
-    
-    def self.options_from_cmdline 
+
+    def self.options_from_cmdline
       result = {}
       cmdline = get_cmdline_args
       cmdline.each do |key, val|
@@ -19,7 +20,7 @@ module Monkeyshines
       end
       result
     end
-    
+
   end
 end
 
@@ -29,4 +30,4 @@ class Hash
       result.deep_merge options
     end
   end
-end  
+end
