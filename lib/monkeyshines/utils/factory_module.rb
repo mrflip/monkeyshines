@@ -47,11 +47,17 @@ module FactoryModule
         FactoryModule.get_class(self, klass_name).new(*args)
       end
 
+      def self.from_hash plan
+        return plan unless plan.is_a?(Hash)
+        klass_name = (plan[:type] || plan['type']) or raise "Fat, drunk, and stupid is no way to go through life, son. You need a plan: #{plan.inspect}"
+        FactoryModule.get_class(self, klass_name).from_hash(plan)
+      end
+
       def self.create plan
         case
         # when plan.class.ancestors.include? self
         when plan.is_a?(Hash)
-          klass_name = plan[:type]
+          klass_name = plan[:type] || plan['type']
           FactoryModule.get_class(self, klass_name).new(plan)
         when plan.is_a?(Symbol)
           klass_name = plan
