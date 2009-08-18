@@ -5,8 +5,10 @@ module Monkeyshines
 
     def bookkeep result
       super result
-      result.recursive_requests do |rec_req|
-        source.put rec_req
+      if result
+        result.recursive_requests do |rec_req|
+          source.put rec_req
+        end
       end
     end
 

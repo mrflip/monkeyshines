@@ -10,8 +10,10 @@ module Monkeyshines
 
       # pass in the host:port uri of the key store.
       def initialize options
+        raise "URI for #{self.class} is required" if options[:uri].blank?
         self.db_host, self.db_port = options[:uri].to_s.split(':')
         super options
+        p db
       end
 
       def db

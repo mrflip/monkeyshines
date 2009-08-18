@@ -18,6 +18,10 @@ module Monkeyshines
           yield request_from_raw(*raw_req_args)
         end
       end
+
+      def put *args
+        request_store.put *args
+      end
     end
   end
 end

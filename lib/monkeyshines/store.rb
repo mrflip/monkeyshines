@@ -3,6 +3,7 @@ module Monkeyshines
     extend FactoryModule
     autoload :Base,                 'monkeyshines/store/base'
     autoload :FlatFileStore,        'monkeyshines/store/flat_file_store'
+    autoload :ConditionalStore,     'monkeyshines/store/conditional_store'
     autoload :ChunkedFlatFileStore, 'monkeyshines/store/chunked_flat_file_store'
     autoload :KeyStore,             'monkeyshines/store/key_store'
     autoload :TokyoTdbKeyStore,     'monkeyshines/store/tokyo_tdb_key_store'

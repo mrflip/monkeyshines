@@ -31,6 +31,10 @@ module Monkeyshines
       str = str.gsub(/ /, '+')
       Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
     end
+
+    def key
+      [self.class, Digest::MD5.hexdigest(self.url)].join("-")
+    end
   end
 
   class ScrapeRequest < TypedStruct.new(

@@ -7,6 +7,7 @@ module Monkeyshines
         :chunktime    => 4*60*60, # default 4 hours
         :pattern   => ":rootdir/:date/:handle+:timestamp-:pid.tsv",
         :rootdir   => nil,
+        :filemode  => 'w',
       }
 
       def initialize _options
