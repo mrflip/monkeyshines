@@ -3,33 +3,33 @@ require 'yaml'
 module Monkeyshines
   class Runner
     attr_accessor :options
-    attr_accessor :source
-    attr_accessor :request_stream
     attr_accessor :fetcher
+    attr_accessor :source
     attr_accessor :dest
     attr_accessor :periodic_log
-    attr_accessor :sleep_time
+    attr_accessor :sleep_time, :force_fetch
 
     DEFAULT_OPTIONS = {
-      :source     => { :type => :simple_request_stream, },
-      :dest       => { :type => :flat_file_store, :filemode => 'w'},
-      :fetcher    => { :type => :http_fetcher,     },
-      :log        => { :dest => nil, :iters => 100, :time => 30 },
-      :skip       => nil,
-      :sleep_time => 0.5
+      :source      => { :type => :simple_request_stream, },
+      :dest        => { :type => :flat_file_store, :filemode => 'w'},
+      :fetcher     => { :type => :http_fetcher,     },
+      :log         => { :dest => nil, :iters => 100, :time => 30 },
+      :skip        => nil,
+      :sleep_time  => 0.5,
+      :force_fetch => false,
     }
 
     def initialize *options_hashes
       self.options = Hash.deep_sum(
         Monkeyshines::Runner::DEFAULT_OPTIONS,
         Monkeyshines::CONFIG,
-        Monkeyshines::Options.options_from_cmdline,
         *options_hashes
         )
       self.fetcher = Monkeyshines::Fetcher.create(       options[:fetcher])
       self.source  = Monkeyshines::RequestStream.create( options[:source])
       self.dest    = Monkeyshines::Store.create(         options[:dest])
-      self.sleep_time = options[:sleep_time]
+      self.sleep_time  = options[:sleep_time]
+      self.force_fetch = options[:force_fetch]
     end
 
     def request_from_raw *raw_req_args
@@ -51,7 +51,7 @@ module Monkeyshines
 
     def fetch_and_store req
       # some stores (eg.conditional) only call fetcher if url key is missing.
-      dest.set(req.url) do
+      dest.set(req.url, force_fetch) do
         response = fetcher.get(req)       # do the url fetch
         return unless response.healthy?   # don't store bad fetches
         [response.scraped_at, response]   # timestamp for bookkeeper, result for dest
@@ -74,8 +74,8 @@ module Monkeyshines
       before_scrape()
       source.each do |req|
         next unless req
-        result = fetch_and_store(req)
-        bookkeep result
+        fetch_and_store(req)
+        bookkeep req
         sleep sleep_time
       end
       dest.close

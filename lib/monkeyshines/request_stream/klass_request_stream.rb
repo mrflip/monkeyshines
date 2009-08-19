@@ -17,7 +17,6 @@ module Monkeyshines
         self.request_store = Monkeyshines::Store.create(options.merge(options[:store]))
         self.klass_scope   = options[:klass_scope]
       end
-
       #
       # use the first arg as a klass name
       # to create a scrape request using rest of args
@@ -26,7 +25,13 @@ module Monkeyshines
         klass = FactoryModule.get_class(klass_scope, klass_name)
         klass.new(*raw_req_args)
       end
+    end
 
+    class KlassHashRequestStream < KlassRequestStream
+      def request_from_raw klass_name, hsh
+        klass = FactoryModule.get_class(klass_scope, klass_name)
+        klass.from_hash(hsh)
+      end
     end
 
   end

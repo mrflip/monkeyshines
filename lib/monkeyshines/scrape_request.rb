@@ -6,6 +6,19 @@ module Monkeyshines
   module ScrapeRequestCore
     autoload :SignedUrl, 'monkeyshines/scrape_request/signed_url'
 
+    def initialize *args
+      super *args
+      if (moreinfo.is_a?(String)) then self.moreinfo = YAML.load(moreinfo) rescue nil  end
+    end
+
+    def to_hash *args
+      hsh = super *args
+      if hsh['moreinfo'].is_a?(Hash)
+        hsh['moreinfo'] = moreinfo.to_yaml
+      end
+      hsh
+    end
+
     #
     def healthy?
       (! url.blank?) && (           # has a URL and either:
@@ -33,8 +46,16 @@ module Monkeyshines
     end
 
     def key
-      [self.class, Digest::MD5.hexdigest(self.url)].join("-")
+      Digest::MD5.hexdigest(self.url)
     end
+
+    def req_generation= val
+      (self.moreinfo||={})[:req_generation] = val
+    end
+    def req_generation
+      (self.moreinfo||={})[:req_generation]
+    end
+
   end
 
   class ScrapeRequest < TypedStruct.new(

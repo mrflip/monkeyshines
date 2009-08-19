@@ -15,7 +15,8 @@ module Monkeyshines
 
       def each *args, &block
         self.request_store.each(*args) do |*raw_req_args|
-          yield request_from_raw(*raw_req_args)
+          req = request_from_raw(*raw_req_args)
+          yield req
         end
       end
 
