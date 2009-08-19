@@ -25,6 +25,7 @@ module Monkeyshines
         Monkeyshines::CONFIG,
         *options_hashes
         )
+      setup_main_log
       self.fetcher = Monkeyshines::Fetcher.create(       options[:fetcher])
       self.source  = Monkeyshines::RequestStream.create( options[:source])
       self.dest    = Monkeyshines::Store.create(         options[:dest])
@@ -34,6 +35,15 @@ module Monkeyshines
 
     def request_from_raw *raw_req_args
       Monkeyshines::ScrapeRequest.new(*raw_req_args)
+    end
+
+    def setup_main_log
+      if (options[:log][:dest])
+        log_file = "%s/log/%s" % [WORK_DIR.expand_path, options[:log][:dest]]
+        p [log_file, options[:log][:dest].to_s]
+        Monkeyshines.logger = Logger.new(log_file+'.log', 'daily')
+        $stdout = $stderr   = File.open( log_file+"-console.log", "a")
+      end
     end
 
     def periodic_log

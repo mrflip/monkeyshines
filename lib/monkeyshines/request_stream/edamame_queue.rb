@@ -3,10 +3,6 @@ require 'digest'
 module Monkeyshines
   module RequestStream
 
-    class EdamameQueueJob < Edamame::Job
-      def queue
-      end
-    end
 
 
     class EdamameQueue < Edamame::Broker
@@ -16,7 +12,7 @@ module Monkeyshines
       end
 
       def each &block
-        work do |job|
+        work(3) do |job|
           yield job.obj['type'], job.obj
         end
       end
@@ -26,12 +22,16 @@ module Monkeyshines
           'type' => req.class.to_s,
           'key'  => [req.class.to_s, req.key].join('-')
           )
-        Edamame::Job.from_hash(job_options.merge("obj" => obj_hash))
+        Edamame::Job.from_hash(job_options.merge("obj" => obj_hash,
+            'priority' => (66000 + 1000*req.req_generation),
+            'tube' => tube ))
       end
 
-      def put job, job_options={}
+      def put job, *args
+        job_options = args.extract_options!
         job = req_to_job(job, job_options) unless job.is_a?(Beanstalk::Job) || job.is_a?(Edamame::Job)
-        super job
+        # p [self.class, job.key, job.obj,job.scheduling, job_options, args]
+        super job, *args
       end
     end
   end

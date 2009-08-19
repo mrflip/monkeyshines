@@ -1,5 +1,11 @@
 module Monkeyshines
 
+  def self.url_encode str
+    return '' if str.blank?
+    str = str.gsub(/ /, '+')
+    Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
+  end
+
   #
   # Base class for Scrape requests
   #
@@ -8,15 +14,19 @@ module Monkeyshines
 
     def initialize *args
       super *args
-      if (moreinfo.is_a?(String)) then self.moreinfo = YAML.load(moreinfo) rescue nil  end
+      if (moreinfo.is_a?(String)) then self.moreinfo = JSON.load(moreinfo) rescue nil  end
     end
 
     def to_hash *args
       hsh = super *args
       if hsh['moreinfo'].is_a?(Hash)
-        hsh['moreinfo'] = moreinfo.to_yaml
+        hsh['moreinfo'] = moreinfo.to_json
       end
       hsh
+    end
+
+    def to_a *args
+      to_hash.values_of(*members).to_flat
     end
 
     #
@@ -40,9 +50,7 @@ module Monkeyshines
     end
 
     def url_encode str
-      return '' if str.blank?
-      str = str.gsub(/ /, '+')
-      Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
+      Monkeyshines.url_encode str
     end
 
     def key
@@ -50,10 +58,10 @@ module Monkeyshines
     end
 
     def req_generation= val
-      (self.moreinfo||={})[:req_generation] = val
+      (self.moreinfo||={})['req_generation'] = val
     end
     def req_generation
-      (self.moreinfo||={})[:req_generation]
+      (self.moreinfo||={})['req_generation']
     end
 
   end
