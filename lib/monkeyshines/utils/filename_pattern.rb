@@ -23,7 +23,7 @@ module Monkeyshines
       #
       def make token_vals={}
         token_vals = token_val_defaults.merge token_vals
-        token_vals[:timestamp] ||= Time.now.utc.strftime("%Y%m%d%H%S%M")
+        token_vals[:timestamp] ||= Time.now.utc.strftime("%Y%m%d%H%M%S")
         val = pattern.gsub(/:(\w+)/){ replace($1, token_vals)  }
         val
       end
