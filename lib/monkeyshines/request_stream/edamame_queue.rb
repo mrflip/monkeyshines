@@ -12,9 +12,10 @@ module Monkeyshines
       end
 
       def each &block
-        work(3) do |job|
+        work(10) do |job|
           yield job.obj['type'], job.obj
         end
+        p [queue, queue.beanstalk_stats]
       end
 
       def req_to_job req, job_options={}
