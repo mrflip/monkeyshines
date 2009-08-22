@@ -64,6 +64,18 @@ module Monkeyshines
       (self.moreinfo||={})['req_generation']
     end
 
+    # inject methods at class level
+    module ClassMethods
+      # Builds a URL query string from a hash of key,value pairs
+      def make_url_query hsh
+        hsh.map{|attr, val| "#{attr}=#{Monkeyshines.url_encode(val)}" }.sort.join("&")
+      end
+    end
+    def self.included base
+      base.class_eval do
+        include ClassMethods
+      end
+    end
   end
 
   class ScrapeRequest < TypedStruct.new(
