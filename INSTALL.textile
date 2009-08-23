@@ -3,12 +3,11 @@ layout: default
 title:  Install Notes
 ---
 
-
 h1(gemheader). {{ site.gemname }} %(small):: install%
 
 <div class="toggle">
 
-h2(boundary). Get the code
+h2. Get the code
 
 This code is available as a gem:
 
@@ -22,20 +21,12 @@ pre. $ git clone git://github.com/mrflip/{{ site.gemname }}
 
 </div><div class="toggle">
 
-h2(boundary). Get the Dependencies
-
-* Hadoop, pig
-* extlib, YAML, JSON
-* Optional gems: trollop, addressable/uri, htmlentities
+h2. Get the Dependencies
 
 
 </div><div class="toggle">
 
 h2. Setup
 
-1. Allow Wukong to discover where his elephant friend lives: either
-** set a $HADOOP_HOME environment variable,
-** or create a file 'config/wukong-site.yaml' with a line that points to the top-level directory of your hadoop install: @:hadoop_home: /usr/local/share/hadoop@
-2. Add wukong's @bin/@ directory to your $PATH, so that you may use its filesystem shortcuts.
 
 </div>
