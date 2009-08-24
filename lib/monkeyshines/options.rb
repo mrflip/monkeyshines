@@ -36,6 +36,7 @@ module Monkeyshines
       opt :handle,          "Identifying string for scrape",     :type => String, :required => true
       opt :source_filename, "URI for scrape store to load from", :type => String
       opt :dest_filename,   "Filename for results",              :type => String
+      opt :log_dest,        "Log file location",                 :type => String
       # opt :dest_cache_uri,  "URI for cache server",              :type => String
     end
   end

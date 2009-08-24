@@ -38,7 +38,7 @@ module Monkeyshines
     end
 
     def setup_main_log
-      if (options[:log][:dest])
+      unless options[:log][:dest].blank?
         log_file = "%s/log/%s" % [WORK_DIR.expand_path, options[:log][:dest]]
         p [log_file, options[:log][:dest].to_s]
         Monkeyshines.logger = Logger.new(log_file+'.log', 'daily')
