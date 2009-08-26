@@ -45,7 +45,7 @@ module Monkeyshines
         close        if (@http && (@http.started?) && (@host != host))
         @host = host
         @connection_opened_at = Time.now
-        Monkeyshines.logger.info "Opening HTTP connection for #{@host} at #{@connection_opened_at}"
+        Log.info "Opening HTTP connection for #{@host} at #{@connection_opened_at}"
         @http = Net::HTTP.new(@host)
         @http.set_debug_output($stderr) if options[:debug_requests]
         @http.start
@@ -55,7 +55,7 @@ module Monkeyshines
       def close
         if @http && @http.started?
           @http.finish
-          Monkeyshines.logger.info "Closing HTTP connection for #{@host} from #{@connection_opened_at}"
+          Log.info "Closing HTTP connection for #{@host} from #{@connection_opened_at}"
         end
         @http = nil
       end
@@ -93,7 +93,7 @@ module Monkeyshines
         when Net::HTTPServerError         then sleep_time = 2 # 5xx All other server errors
         else                              sleep_time = 1
         end
-        Monkeyshines.logger.warn "Received #{response.code}, sleeping #{sleep_time} ('#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at})"
+        Log.warn "Received #{response.code}, sleeping #{sleep_time} ('#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at})"
         sleep sleep_time
       end
 
@@ -106,10 +106,10 @@ module Monkeyshines
           scrape_request.response         = response
           backoff response
         rescue StandardError, Timeout::Error => e
-          Monkeyshines.logger.warn ["Recovering from fetcher error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
+          Log.warn ["Recovering from fetcher error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
           close # restart the connection
         rescue Exception => e
-          Monkeyshines.logger.warn e
+          Log.warn e
           raise e
         end
         scrape_request.scraped_at = Time.now.utc.to_flat
@@ -119,7 +119,7 @@ module Monkeyshines
       def get_and_report_timing *args
         start = Time.now.to_f
         response = get *args
-        Monkeyshines.logger.info( Time.now.to_f - start )
+        Log.info( Time.now.to_f - start )
         response
       end
     end

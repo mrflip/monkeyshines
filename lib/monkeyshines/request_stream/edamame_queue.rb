@@ -2,9 +2,12 @@ require 'edamame'
 require 'digest'
 module Monkeyshines
   module RequestStream
+    QUEUE_REQUEST_TIMEOUT = 10 # seconds
 
-
-
+    #
+    # Watch for jobs in an Edamame priority queue
+    # (http://mrflip.github.com/edamame)
+    #
     class EdamameQueue < Edamame::Broker
       def initialize _options
         tube = Monkeyshines::CONFIG[:handle].to_s.gsub(/_/, '')
@@ -12,10 +15,10 @@ module Monkeyshines
       end
 
       def each &block
-        work(10) do |job|
+        work(QUEUE_REQUEST_TIMEOUT) do |job|
           yield job.obj['type'], job.obj
         end
-        p [queue, queue.beanstalk_stats]
+        Log.info [queue, queue.beanstalk_stats]
       end
 
       def req_to_job req, job_options={}

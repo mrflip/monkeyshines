@@ -40,9 +40,7 @@ module Monkeyshines
     def setup_main_log
       unless options[:log][:dest].blank?
         log_file = "%s/log/%s" % [WORK_DIR.expand_path, options[:log][:dest]]
-        p [log_file, options[:log][:dest].to_s]
-        Monkeyshines.logger = Logger.new(log_file+'.log', 'daily')
-        $stdout = $stderr   = File.open( log_file+"-console.log", "a")
+        $stdout = $stderr = File.open( log_file+"-console.log", "a" )
       end
     end
 
@@ -80,7 +78,7 @@ module Monkeyshines
     # ** do logging
     #
     def run
-      Monkeyshines.logger.info "Beginning scrape itself"
+      Log.info "Beginning scrape itself"
       before_scrape()
       source.each do |req|
         next unless req

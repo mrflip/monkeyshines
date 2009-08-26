@@ -17,13 +17,12 @@ opts = Trollop::options do
   opt :into,         'Filename for flat TSV dump', :type => String
   opt :log,          'File to store log', :type => String
 end
-Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 Trollop::die :from_type unless opts[:from_type]
 
 # ******************** Read From ********************
 src_store_klass = Wukong.class_from_resource('Monkeyshines::Store::'+opts[:from_type])
 src_store = src_store_klass.new(opts[:from])
-Monkeyshines.logger.info "Loaded store with #{src_store.size}"
+Log.info "Loaded store with #{src_store.size}"
 
 # ******************** Write into ********************
 DUMPFILE_BASE = opts[:into]
@@ -47,7 +46,7 @@ src_store.each do |key, hsh|
   hsh['response_code']          = nil if hsh['response_code']    == 'nil'
   hsh['contents']               = nil if hsh['contents']         == 'nil'
   unless hsh['contents'] || hsh['response_code']
-    # Monkeyshines.logger.info "removing #{hsh.inspect}"
+    # Log.info "removing #{hsh.inspect}"
     src_store.db.out(key)
     next
   end

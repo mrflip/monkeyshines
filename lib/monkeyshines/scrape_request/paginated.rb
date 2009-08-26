@@ -161,7 +161,7 @@ module Monkeyshines
       if sess_items == (hard_request_limit * items_per_page)
         # bump the rate if we hit the hard cap:
         new_rate = [prev_rate * 1.25, 1000/120.0].max
-        Monkeyshines.logger.info "Bumping rate on #{query_term} from #{prev_rate} to #{new_rate}"
+        Log.info "Bumping rate on #{query_term} from #{prev_rate} to #{new_rate}"
         self.prev_rate = new_rate
       end
       self.prev_items    = prev_items.to_i + sess_items.to_i

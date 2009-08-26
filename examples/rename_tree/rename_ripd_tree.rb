@@ -50,8 +50,8 @@ new_filename_pat = FilenamePattern.new(
 # Rename with logging and without overwriting
 #
 def rename_carefully old_filename, new_filename, dry_run=false
-  if File.exists?(new_filename) then Monkeyshines.logger.warn "Cowardly refusing to overwrite #{new_filename} from #{old_filename}" ; next ; end
-  Monkeyshines.logger.info "%s%-60s \t=> %s" % [dry_run ? 'DRY RUN - ' : '', old_filename, new_filename]
+  if File.exists?(new_filename) then Log.warn "Cowardly refusing to overwrite #{new_filename} from #{old_filename}" ; next ; end
+  Log.info "%s%-60s \t=> %s" % [dry_run ? 'DRY RUN - ' : '', old_filename, new_filename]
   return if dry_run
   FileUtils.mkdir_p File.dirname(new_filename)
   FileUtils.mv old_filename, new_filename
@@ -68,7 +68,7 @@ end
 #
 old_filename_pats.each do |files_to_rename, old_filename_pat_str|
   old_filename_pat = FilenamePattern.new(old_filename_pat_str)
-  Monkeyshines.logger.info "Renaming files matching #{files_to_rename}"
+  Log.info "Renaming files matching #{files_to_rename}"
   Dir[files_to_rename].sort.each do |old_filename|
     next unless File.file?(old_filename)
     filename_tokens = old_filename_pat.recognize(old_filename) or next

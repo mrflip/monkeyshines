@@ -101,7 +101,7 @@ module Monkeyshines
         ll << "\t#{"%4d"%(scrape_job.new_items||0)} nu"
         ll << "\tin #{"%8.2f" % delay} s"
         ll << "\t#{(Time.now + delay).strftime("%Y-%m-%d %H:%M:%S")}"
-        Monkeyshines.logger.info ll
+        Log.info ll
       end
 
       # ===========================================================================
@@ -123,8 +123,8 @@ module Monkeyshines
       # Returns nil on error or timeout. Interrupt error passes through
       def reserve_job! to=10
         begin  qjob = job_queue.reserve(to)
-        rescue Beanstalk::TimedOut => e ; Monkeyshines.logger.info e.to_s ; sleep 0.4 ; return ;
-        rescue StandardError => e       ; Monkeyshines.logger.warn e.to_s ; sleep 1   ; return ; end
+        rescue Beanstalk::TimedOut => e ; Log.info e.to_s ; sleep 0.4 ; return ;
+        rescue StandardError => e       ; Log.warn e.to_s ; sleep 1   ; return ; end
         qjob
       end
 

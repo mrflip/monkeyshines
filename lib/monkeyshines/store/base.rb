@@ -4,7 +4,7 @@ module Monkeyshines
       attr_accessor :options
       def initialize _options={}
         self.options = _options
-        Monkeyshines.logger.info "Creating #{self.class}"
+        Log.info "Creating #{self.class}"
       end
 
       #
@@ -13,7 +13,7 @@ module Monkeyshines
           begin
             item = klass.new *args[1..-1]
           rescue Exception => e
-            Monkeyshines.logger.info [args, e.to_s, self].join("\t")
+            Log.info [args, e.to_s, self].join("\t")
             raise e
           end
           yield item

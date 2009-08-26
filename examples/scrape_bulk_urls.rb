@@ -47,7 +47,6 @@ opts.merge! scrape_config
 # ******************** Log ********************
 if (opts[:log])
   opts[:log] = (WORK_DIR+'/log/'+File.basename(opts[:from],'.tsv'))
-  Monkeyshines.logger = Logger.new(opts[:log]+'.log', 'daily')
   $stdout = $stderr = File.open(opts[:log]+"-console.log", "a")
 end
 

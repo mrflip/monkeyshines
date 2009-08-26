@@ -21,14 +21,14 @@ opts = Trollop::options do
 end
 
 # ******************** Log ********************
-Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
+
 periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 20_000, :time => 30)
 
 # ******************** Read From ********************
 TYRANT_PORTS = { 'tinyurl' => ":10001", 'bitly' => ":10002", 'other' => ":10003" }
 src_uri = TYRANT_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or other). got: #{handle}"
 src_store = Monkeyshines::Store::TyrantTdbKeyStore.new(src_uri)
-Monkeyshines.logger.info "Loaded store with #{src_store.size}"
+Log.info "Loaded store with #{src_store.size}"
 
 # ******************** Write into ********************
 # dest_store = Monkeyshines::Store::FlatFileStore.new(opts[:into], opts.reverse_merge(:filemode => 'w'))
@@ -37,7 +37,7 @@ dest_uri = RDB_PORTS[opts[:handle]] or raise "Need a handle (bitly, tinyurl or o
 dest_store = Monkeyshines::Store::TyrantRdbKeyStore.new(dest_uri)
 # src_store_klass = Wukong.class_from_resource('Monkeyshines::Store::'+opts[:from_type])
 # src_store = src_store_klass.new(opts[:from])
-Monkeyshines.logger.info "Loading into store with #{dest_store.size}"
+Log.info "Loading into store with #{dest_store.size}"
 
 # ******************** Dump ********************
 src_store.each do |key, hsh|

@@ -4,10 +4,8 @@ $: << ENV['HOME']+'/ics/rubygems/log4r-1.0.5/src'
 require "monkeyshines/utils/logger"
 require "monkeyshines/utils/filename_pattern.rb"; include Monkeyshines::Utils
 require 'wukong'
-require 'wukong/logger'
 require 'fileutils'
 require 'trollop'
-Monkeyshines.logger = Wukong.logger
 
 #
 # This script demonstrates the use of FilenamePattern.
@@ -72,7 +70,7 @@ MADE_DIR = { }
 # Rename with logging and without overwriting
 #
 def rename_carefully old_file, new_filename, do_it=false
-  Wukong.logger.info "%s%-87s\t=> %s" % [do_it ? "" : "DRY RUN ", old_file.path, new_filename]
+  Log.info "%s%-87s\t=> %s" % [do_it ? "" : "DRY RUN ", old_file.path, new_filename]
   return unless do_it
   dirname = File.dirname(new_filename)
   if !MADE_DIR[dirname] then Wukong::Dfs::HFile.mkdir_p(dirname) ; MADE_DIR[dirname] = true ; end
@@ -83,7 +81,7 @@ end
 # Do this thing
 #
 old_filename_pats.each do |files_to_rename, old_filename_rule|
-  Monkeyshines.logger.info "Renaming files matching #{files_to_rename}"
+  Log.info "Renaming files matching #{files_to_rename}"
   if old_filename_rule.is_a? Hash
     old_filename_pat = FilenamePattern.new(old_filename_rule[:patt])
     more_toks = old_filename_rule[:toks] || { }

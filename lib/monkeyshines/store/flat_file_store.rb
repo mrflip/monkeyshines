@@ -10,7 +10,7 @@ module Monkeyshines
       # +filename_root+  : first part of name for files
       #
       def initialize options={}
-        Monkeyshines.logger.debug "New #{self.class} as #{options.inspect}"
+        Log.debug "New #{self.class} as #{options.inspect}"
         self.filename = options[:filename] or raise "Missing filename in #{self.class}"
         self.filemode = options[:filemode] || 'r'
       end
@@ -31,7 +31,7 @@ module Monkeyshines
       # Read ahead n_lines lines in the file
       #
       def skip! n_lines
-        Monkeyshines.logger.info "Skipping #{n_lines} in #{self.class}:#{filename}"
+        Log.info "Skipping #{n_lines} in #{self.class}:#{filename}"
         n_lines.times do
           file.readline
         end
@@ -43,7 +43,7 @@ module Monkeyshines
       #
       def file
         return @file if @file
-        Monkeyshines.logger.info "Opening file #{filename} with mode #{filemode}"
+        Log.info "Opening file #{filename} with mode #{filemode}"
         @file = File.open(filename, filemode)
       end
 
@@ -57,7 +57,7 @@ module Monkeyshines
       def mkdir!
         dir = File.dirname(filename)
         return if File.directory?(dir)
-        Monkeyshines.logger.info "Making directory #{dir}"
+        Log.info "Making directory #{dir}"
         FileUtils.mkdir_p dir
       end
 

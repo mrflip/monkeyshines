@@ -47,7 +47,6 @@ handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
 
 # ******************** Log ********************
 opts[:log] = (WORK_DIR+"/log/shorturls_#{handle}-#{Time.now.to_flat}.log") if (opts[:log]=='')
-Monkeyshines.logger = Logger.new(opts[:log], 'daily') if opts[:log]
 periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 10000, :time => 30)
 
 #
@@ -95,7 +94,7 @@ fetcher = Monkeyshines::Fetcher::HttpHeadFetcher.new
 #
 # ******************** Do this thing ********************
 #
-Monkeyshines.logger.info "Beginning scrape itself"
+Log.info "Beginning scrape itself"
 src_store.each do |bareurl, *args|
   # prepare the request
   next if bareurl =~ %r{\Ahttp://(poprl.com|short.to|timesurl.at|bkite.com)}

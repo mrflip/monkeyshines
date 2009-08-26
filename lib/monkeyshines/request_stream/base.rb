@@ -10,7 +10,7 @@ module Monkeyshines
       Base::DEFAULT_OPTIONS = {}
       def initialize _options={}
         self.options = Base::DEFAULT_OPTIONS.deep_merge(_options)
-        Monkeyshines.logger.debug "New #{self.class} as #{options.inspect}"
+        Log.debug "New #{self.class} as #{options.inspect}"
       end
 
       def each *args, &block
