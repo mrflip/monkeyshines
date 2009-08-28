@@ -1,8 +1,6 @@
-/.#
-.\#*
-.#*
-*~
 \#*
+.\#*
+*~
 .DS_Store
 Icon?
 REVISION
@@ -14,8 +12,15 @@ nohup.out
 /**/log/*
 /**/cache/*
 /**/db/*.sqlite3
-/**/*DONTVERSION*
+tmp
+config/*private*
+a.out
 *.sw?
+*.o
+*.so
+*.stackdump
+*.pyc
+/**/*DONTVERSION*
 coverage
 rdoc
 pkg
@@ -24,9 +29,4 @@ pkg
 .settings
 .tasks-cache
 *.tmproj
-TODO (Autosaved).taskpaper
-twitter_pass.rb
-config/wukong-site.rb
-private.yaml
-config/private.yaml
 /**/*private*
