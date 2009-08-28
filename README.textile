@@ -1,9 +1,16 @@
 Monkeyshines is a tool for doing an algorithmic scrape.
 
-It's designed to handle large-scale scrapes that may exceed the capabilities of single-machine relational databases, so it plays nicely with Hadoop / Wukong and with distributed databases (MongoDB, tokyocabinet, etc.).
-
+It's designed to handle large-scale scrapes that may exceed the capabilities of single-machine relational databases, so it plays nicely with Hadoop / Wukong, with distributed databases (MongoDB, tokyocabinet, etc.), and distributed job queue (eg "edamame/beanstalk":http://mrflip.github.com/edamame).
 
 ---------------------------------------------------------------------------
+
+h2. Overview
+
+A monkeyshines scraper is simple in principle:
+
+
+
+
 
 h2. Request Queue
 
