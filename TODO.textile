@@ -1,9 +1,0 @@
-
-
-
-* Make BeanstalkQueue a concrete implementation of a ReschedulingQueue
-
-* The delay calculation shouldn't be in ReschedulingQueue, it should be in the
-  job itself.
-
-  
