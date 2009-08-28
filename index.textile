@@ -1,0 +1,30 @@
+---
+layout: default
+title:  mrflip.github.com/monkeyshines
+collapse: false
+---
+
+h1(gemheader). {{ site.gemname }} %(small):: scraper%
+
+
+p(description). {{ site.description }}
+
+<div class="toggle">
+
+h2. How to write a Monkeyshines Scraper
+
+</div><div class="toggle">
+
+h2. More info
+
+There are many useful examples in the examples/ directory.
+
+h3. Authors
+
+Philip (flip) Kromer (flip@infochimps.org)
+
+Patches submitted by:
+
+</div>
+
+{% include news.html %}

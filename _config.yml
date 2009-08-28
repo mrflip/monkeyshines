@@ -1,0 +1,30 @@
+---
+permalink:      ":year-:month/:title.html"
+markdown:       rdiscount
+pygments:       true
+auto:           true
+server:         true
+server_port:    4000
+maruku:
+  use_tex:      false
+  use_divs:     false
+  png_dir:      images/latex
+  png_url:      /images/latex
+
+header_ref:     '.html'    # .html for subdirs, / for main.
+assets_path:    '/'        # http://github.mrflip.com
+
+gemuser:        mrflip
+gemname:        monkeyshines
+gemversion:     0.1.1
+title:          mrflip.github.com/monkeyshines
+
+keywords:       [ 'wukong,hadoop,ruby,mrflip,infochimps,map,reduce,streaming,dumbo,happy,mrtoolkit,script,simple' ]
+description:    "Monkeyshines: guided scraper"
+header_files:
+  - INSTALL
+  - usage
+  - news
+  - LICENSE
+
+credits:
