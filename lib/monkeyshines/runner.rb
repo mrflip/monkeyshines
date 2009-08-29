@@ -1,4 +1,5 @@
 require 'yaml'
+require 'monkeyshines/runner_core/options'
 
 module Monkeyshines
   class Runner
@@ -31,11 +32,24 @@ module Monkeyshines
     def initialize *options_hashes
       prepare_options(*options_hashes)
       setup_main_log
-      self.fetcher = Monkeyshines::Fetcher.create(       options[:fetcher])
-      self.source  = Monkeyshines::RequestStream.create( options[:source])
-      self.dest    = Monkeyshines::Store.create(         options[:dest])
+      self.source  = create_source
+      self.fetcher = create_fetcher
+      self.dest    = create_dest
       self.sleep_time  = options[:sleep_time]
       self.force_fetch = options[:force_fetch]
+    end
+
+    def create_source
+      p options[:source]
+      Monkeyshines::RequestStream.create(options[:source])
+    end
+
+    def create_dest
+      Monkeyshines::Store.create(options[:dest])
+    end
+
+    def create_fetcher
+      Monkeyshines::Fetcher.create(options[:fetcher])
     end
 
     #
@@ -47,6 +61,8 @@ module Monkeyshines
     # Options appearing later win out.
     #
     def prepare_options *options_hashes
+      self.class.load_cmdline_options!
+      Monkeyshines.load_global_options!(Monkeyshines::CONFIG[:handle])
       self.options = Hash.deep_sum(
         Monkeyshines::Runner::DEFAULT_OPTIONS,
         Monkeyshines::CONFIG,
@@ -117,7 +133,7 @@ module Monkeyshines
     #
     # after_scrape
     #
-    def after_scrape result
+    def after_scrape
       dest.close
       fetcher.close
     end
