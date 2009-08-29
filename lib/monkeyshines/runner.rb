@@ -62,7 +62,6 @@ module Monkeyshines
     #
     def prepare_options *options_hashes
       self.class.load_cmdline_options!
-      Monkeyshines.load_global_options!(Monkeyshines::CONFIG[:handle])
       self.options = Hash.deep_sum(
         Monkeyshines::Runner::DEFAULT_OPTIONS,
         Monkeyshines::CONFIG,
@@ -86,6 +85,7 @@ module Monkeyshines
         fetch_and_store(req)
         after_fetch(req)
         sleep sleep_time
+        req
       end
       after_scrape()
     end

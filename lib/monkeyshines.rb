@@ -10,6 +10,7 @@ require 'monkeyshines/scrape_request'
 
 module Monkeyshines
   autoload :ScrapeRequest,         'monkeyshines/scrape_request'
+  autoload :ScrapeJob,             'monkeyshines/scrape_job'
   autoload :ScrapeRequestCore,     'monkeyshines/scrape_request'
   autoload :RequestStream,         'monkeyshines/request_stream'
   autoload :Store,                 'monkeyshines/store'

@@ -87,10 +87,10 @@ module FactoryModule
   #   FactoryModule.list_of_classes(Wuclan::Twitter::Scrape, 'followers_ids,friends_ids', 'request')
   #   # => [Wuclan::Twitter::Scrape::FollowersIdsRequest, Wuclan::Twitter::Scrape::FriendsIdsRequest]
   #
-  def self.list_of_classes scope, klass_names, suffix=''
+  def self.list_of_classes scope, klass_names, prefix=nil, suffix=nil
     klass_names = klass_names.split(',') if klass_names.is_a?(String)
     klass_names.map do |klass_name|
-      klass_name = [klass_name, suffix.to_s].compact.join('_') if klass_name.is_a?(String)
+      klass_name = [prefix, klass_name, suffix].compact.join('_') if klass_name.is_a?(String)
       self.get_class(scope, klass_name)
     end
   end

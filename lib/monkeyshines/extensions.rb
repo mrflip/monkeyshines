@@ -1,7 +1,7 @@
 class Numeric
   def clamp min, max
-    return min if self <= min
-    return max if self >= max
+    return min if min && (self <= min)
+    return max if max && (self >= max)
     self
   end
 end

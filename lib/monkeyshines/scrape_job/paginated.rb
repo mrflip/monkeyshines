@@ -23,7 +23,7 @@ module Monkeyshines
       #
       # Generates request for each page to be scraped.
       #
-      # The includer must define a #create_request(page, pageinfo) method.
+      # The includer must define a #create_request(page, reqinfo) method.
       #
       # * request is generated
       # * ... and yielded to the call block. (which must return the fulfilled
@@ -32,10 +32,10 @@ module Monkeyshines
       #
       # Scraping stops when is_last?(response, page) is true
       #
-      def each_request pageinfo={}, &block
+      def each_page reqinfo={}, &block
         before_pagination()
-        (1..hard_request_limit).each do |page|
-          request = create_request(page, pageinfo)
+        (1..max_pages).each do |page|
+          request = request_for_page(page, reqinfo)
           response = yield request
           after_fetch(response, page)
           break if is_last?(response, page)
@@ -65,12 +65,15 @@ module Monkeyshines
       #
       # Soft limit on the number of pages to scrape.
       #
-      # Typically, leave this set to the hard_request_limit if you don't know
-      # beforehand how many pages to scrape, and override is_last? to decide when
-      # to stop short of the API limit
+      # If we know the max_total_items, use it to set the number of pages;
+      # otherwise, let it run up to the hard limit.
+      #
+      # Typically, use this to set an upper limit that you know beforehand, and
+      # use #is_last? to decide based on the results
       #
       def max_pages
-        hard_request_limit
+        return hard_request_limit if (!max_total_items)
+        (max_total_items.to_f / items_per_page).ceil.clamp(0, hard_request_limit)
       end
 
       # inject class variables
@@ -78,8 +81,15 @@ module Monkeyshines
         base.class_eval do
           # Hard request limit: do not in any case exceed this number of requests
           class_inheritable_accessor :hard_request_limit
+
           # max items per page the API might return
           class_inheritable_accessor :items_per_page
+
+          # Total items in all requests, if known ahead of time -- eg. a
+          # twitter_user's statuses_count can be used to set the max_total_items
+          # for TwitterUserTimelineRequests
+          attr_accessor :max_total_items
+
           # Span of items gathered in this scrape scrape_job.
           attr_accessor :sess_items, :sess_span, :sess_timespan
         end
