@@ -1,0 +1,42 @@
+
+
+h2. RequestStream
+
+RequestStream generates ScrapeRequests.
+
+h4. Responds to
+
+* each
+
+
+h2. ScrapeRequest
+
+h4. Responds to
+
+* url
+* scraped_at=, response_code=, response_message=, response=
+* healthy?
+* key
+* to_hash
+
+* immediate_requests
+* recursive_requests
+
+
+h2. Fetcher
+
+* get(scrape_request)
+* close()
+
+h2. Store
+
+* each(*args, &block)
+
+* set(key, force=false){ ... block returning [slug, request] }
+* save(req)
+* << req
+* close()
+
+
+
+
