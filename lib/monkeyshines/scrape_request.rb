@@ -15,6 +15,7 @@ module Monkeyshines
     def initialize *args
       super *args
       if (moreinfo.is_a?(String)) then self.moreinfo = JSON.load(moreinfo) rescue nil  end
+      make_url! if (! url)
     end
 
     def to_hash *args

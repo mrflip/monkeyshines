@@ -23,6 +23,10 @@ module Monkeyshines
       def put *args
         request_store.put *args
       end
+
+      def skip! *args
+        request_store.skip! *args
+      end
     end
   end
 end

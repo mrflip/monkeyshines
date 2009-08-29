@@ -194,12 +194,6 @@ module Monkeyshines
       self.sess_items += num_items
     end
 
-    def update_spans response
-      # Update intervals
-      self.sess_span     << response.span
-      self.sess_timespan << response.timespan
-    end
-
 
     def sess_rate
       return nil if (!sess_timespan) || (sess_timespan.size == 0)
@@ -220,19 +214,6 @@ module Monkeyshines
       rt
     end
 
-    # gap between oldest scraped in this scrape_job and last one scraped in
-    # previous scrape_job.
-    def unscraped_span
-      UnionInterval.new(prev_span_max, sess_span.min)
-    end
-    # span of previous scrape
-    def prev_span
-      @prev_span ||= UnionInterval.new(prev_span_min, prev_span_max)
-    end
-    def prev_span= min_max
-      self.prev_span_min, self.prev_span_max = min_max.to_a
-      @prev_span = UnionInterval.new(prev_span_min, prev_span_max)
-    end
 
     # inject class variables
     def self.included base

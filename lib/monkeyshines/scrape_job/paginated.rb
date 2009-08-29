@@ -32,7 +32,7 @@ module Monkeyshines
       #
       # Scraping stops when is_last?(response, page) is true
       #
-      def each_page reqinfo={}, &block
+      def each_request reqinfo={}, &block
         before_pagination()
         (1..max_pages).each do |page|
           request = request_for_page(page, reqinfo)
@@ -89,9 +89,6 @@ module Monkeyshines
           # twitter_user's statuses_count can be used to set the max_total_items
           # for TwitterUserTimelineRequests
           attr_accessor :max_total_items
-
-          # Span of items gathered in this scrape scrape_job.
-          attr_accessor :sess_items, :sess_span, :sess_timespan
         end
       end
     end # module Paginated
@@ -132,36 +129,57 @@ module Monkeyshines
         super
       end
 
-      def after_pagination
-        self.prev_items    = prev_items.to_i + sess_items.to_i
-        self.prev_span     = sess_span       + prev_span
-        self.new_items     = sess_items.to_i + new_items.to_i
-        self.sess_items    = 0
-        self.sess_span     = UnionInterval.new
-        super
-      end
-
-      # Return true if the next request would be pointless (true if, perhaps, the
-      # response had no items, or the API page limit is reached)
-      def is_last? response, page
-        unscraped_span.empty? || super(response, page)
-      end
-
       #
       # Feed back info from the scrape
       #
       def after_fetch response, page
         super response, page
         return unless response && response.items
-        count_new_items response
+        # count_new_items response
         update_spans response
       end
+
+      def update_spans response
+        # Update intervals
+        self.sess_span     << response.span
+        self.sess_timespan << response.timespan
+      end
+
+      # gap between oldest scraped in this scrape_job and last one scraped in
+      # previous scrape_job.
+      def unscraped_span
+        UnionInterval.new(prev_span_max, sess_span.min)
+      end
+      # span of previous scrape
+      def prev_span
+        @prev_span ||= UnionInterval.new(prev_span_min, prev_span_max)
+      end
+      def prev_span= min_max
+        self.prev_span_min, self.prev_span_max = min_max.to_a
+        @prev_span = UnionInterval.new(prev_span_min, prev_span_max)
+      end
+
+      # Return true if the next request would be pointless (true if, perhaps, the
+      # response had no items, or the API page limit is reached)
+      def is_last? response, page
+        Log.debug(['reached prev:', prev_span, sess_span].inspect) if unscraped_span.empty?
+        unscraped_span.empty? || super(response, page)
+      end
+
+      # def after_pagination
+      #   self.prev_items    = prev_items.to_i + sess_items.to_i
+      #   self.prev_span     = sess_span       + prev_span
+      #   self.new_items     = sess_items.to_i + new_items.to_i
+      #   self.sess_items    = 0
+      #   self.sess_span     = UnionInterval.new
+      #   super
+      # end
 
       # inject class variables
       def self.included base
         base.class_eval do
-          attr_accessor :new_items
-          # include Monkeyshines::Paginated
+          # Span of items gathered in this scrape scrape_job.
+          attr_accessor :sess_items, :sess_span, :sess_timespan
         end
       end
     end
