@@ -81,7 +81,9 @@ module Monkeyshines
       source.skip!(options[:skip].to_i) if options[:skip]
     end
 
-
+    #
+    # enumerates requests
+    #
     def each_request &block
       source.each(&block)
     end
