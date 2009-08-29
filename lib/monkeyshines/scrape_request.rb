@@ -67,6 +67,13 @@ module Monkeyshines
     # inject methods at class level
     module ClassMethods
       # Builds a URL query string from a hash of key,value pairs
+      #
+      # parameters are in sort order by encoded string
+      #
+      # Ex.
+      #   make_url_query( :foo => 'bar', :q => 'happy meal', :angle => 90 )
+      #   #=> "angle=90&foo=bar&q=happy%20meal"
+      #
       def make_url_query hsh
         hsh.map{|attr, val| "#{attr}=#{Monkeyshines.url_encode(val)}" }.sort.join("&")
       end
