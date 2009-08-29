@@ -67,7 +67,7 @@ module Monkeyshines
         obj
       end
 
-      def set key, &block
+      def set key, *args, &block
         tok, obj = block.call
         save obj
       end

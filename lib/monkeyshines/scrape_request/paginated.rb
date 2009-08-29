@@ -1,5 +1,3 @@
-require 'active_support/core_ext/class/inheritable_attributes'
-require 'time'
 module Monkeyshines
   module Paginated
   end
@@ -33,14 +31,6 @@ module Monkeyshines
   end
 
   module PaginatedWithRateAndLimit
-
-    # Set up bookkeeping for pagination tracking
-    def before_pagination
-      self.sess_items    ||= 0
-      self.sess_span       = UnionInterval.new
-      self.sess_timespan   = UnionInterval.new
-      super
-    end
 
     def after_pagination
       # piw = [(prev_items.to_f ** 0.66), (items_per_page * hard_request_limit * 4.0)].min

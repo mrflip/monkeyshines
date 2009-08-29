@@ -13,7 +13,7 @@ module Monkeyshines
         :klass_scope => Kernel,
       }
       def initialize _options={}
-        super KlassRequestStream::DEFAULT_OPTIONS.merge(_options)
+        super KlassRequestStream::DEFAULT_OPTIONS.deep_merge(_options)
         self.request_store = Monkeyshines::Store.create(options.merge(options[:store]))
         self.klass_scope   = options[:klass_scope]
       end
