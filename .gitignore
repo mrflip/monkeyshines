@@ -30,3 +30,7 @@ pkg
 .tasks-cache
 *.tmproj
 /**/*private*
+css
+/images
+/javascripts
+/_site

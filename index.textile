@@ -4,7 +4,7 @@ title:  mrflip.github.com/monkeyshines
 collapse: false
 ---
 
-h1(gemheader). {{ site.gemname }} %(small):: scraper%
+h1(gemheader). Monkeyshines %(small):: scraper%
 
 
 p(description). {{ site.description }}
