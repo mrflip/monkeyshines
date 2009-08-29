@@ -19,12 +19,17 @@ module Monkeyshines
       :force_fetch => false,
     }
 
+    #
+    # Assembles a MonkeyshinesRunner from the given plan.
+    #
+    # options_hashes is a hash tree of options to build each particular
+    # component. The options are deep merged with the class and global defaults.
+    #
+    # The options for each of :fetcher, :request_stream and :dest are passed to
+    # the Fetcher, RequestStream and Store factories respectively
+    #
     def initialize *options_hashes
-      self.options = Hash.deep_sum(
-        Monkeyshines::Runner::DEFAULT_OPTIONS,
-        Monkeyshines::CONFIG,
-        *options_hashes
-        )
+      prepare_options(*options_hashes)
       setup_main_log
       self.fetcher = Monkeyshines::Fetcher.create(       options[:fetcher])
       self.source  = Monkeyshines::RequestStream.create( options[:source])
@@ -33,41 +38,20 @@ module Monkeyshines
       self.force_fetch = options[:force_fetch]
     end
 
-    def request_from_raw *raw_req_args
-      Monkeyshines::ScrapeRequest.new(*raw_req_args)
-    end
-
-    def setup_main_log
-      unless options[:log][:dest].blank?
-        log_file = "%s/log/%s" % [WORK_DIR.expand_path, options[:log][:dest]]
-        $stdout = $stderr = File.open( log_file+"-console.log", "a" )
-      end
-    end
-
-    def periodic_log
-      @periodic_log ||= Monkeyshines::Monitor::PeriodicLogger.new(options[:log])
-    end
-
-    def before_scrape
-      source.skip!(options[:skip].to_i) if options[:skip]
-    end
-
-    def log_line result
-      result_log_line = result.blank? ? ['-','-','-'] : [result.response_code, result.url, result.contents.to_s[0..80]]
-      [ dest.log_line, result_log_line ].flatten
-    end
-
-    def fetch_and_store req
-      # some stores (eg.conditional) only call fetcher if url key is missing.
-      dest.set(req.url, force_fetch) do
-        response = fetcher.get(req)       # do the url fetch
-        return unless response.healthy?   # don't store bad fetches
-        [response.scraped_at, response]   # timestamp for bookkeeper, result for dest
-      end
-    end
-
-    def bookkeep result
-      periodic_log.periodically{ self.log_line(result) }
+    #
+    # Deep merges:
+    # * the DEFAULT_OPTIONS in runner.rb,
+    # * the global Monkeyshines::CONFIG loaded from disk
+    # * the options passed in as arguments
+    #
+    # Options appearing later win out.
+    #
+    def prepare_options *options_hashes
+      self.options = Hash.deep_sum(
+        Monkeyshines::Runner::DEFAULT_OPTIONS,
+        Monkeyshines::CONFIG,
+        *options_hashes
+        )
     end
 
     #
@@ -80,15 +64,81 @@ module Monkeyshines
     def run
       Log.info "Beginning scrape itself"
       before_scrape()
-      source.each do |req|
+      each_request do |req|
         next unless req
+        before_fetch(req)
         fetch_and_store(req)
-        bookkeep req
+        after_fetch(req)
         sleep sleep_time
       end
+      after_scrape()
+    end
+
+    #
+    # before_scrape filter chain.
+    #
+    def before_scrape
+      source.skip!(options[:skip].to_i) if options[:skip]
+    end
+
+
+    def each_request &block
+      source.each(&block)
+    end
+
+    #
+    # before_scrape filter chain.
+    #
+    def before_fetch req
+    end
+
+    #
+    # Fetch and store result
+    #
+    #
+    def fetch_and_store req
+      # some stores (eg.conditional) only call fetcher if url key is missing.
+      dest.set(req.url, force_fetch) do
+        response = fetcher.get(req)       # do the url fetch
+        return unless response.healthy?   # don't store bad fetches
+        [response.scraped_at, response]   # timestamp for bookkeeper, result for dest
+      end
+    end
+
+    #
+    # after_fetch
+    #
+    def after_fetch req
+      periodic_log.periodically{ self.log_line(req) }
+    end
+
+    #
+    # after_scrape
+    #
+    def after_scrape result
       dest.close
       fetcher.close
     end
+
+    #
+    # Logging
+    #
+    def setup_main_log
+      unless options[:log][:dest].blank?
+        log_file = "%s/log/%s" % [WORK_DIR.expand_path, options[:log][:dest]]
+        $stdout = $stderr = File.open( log_file+"-console.log", "a" )
+      end
+    end
+
+    def periodic_log
+      @periodic_log ||= Monkeyshines::Monitor::PeriodicLogger.new(options[:log])
+    end
+
+    def log_line result
+      result_log_line = result.blank? ? ['-','-','-'] : [result.response_code, result.url, result.contents.to_s[0..80]]
+      [ dest.log_line, result_log_line ].flatten
+    end
+
 
   end
 end
