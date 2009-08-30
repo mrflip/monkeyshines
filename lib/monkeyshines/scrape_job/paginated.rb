@@ -1,4 +1,3 @@
-require 'active_support/core_ext/class/inheritable_attributes'
 require 'time'
 require 'monkeyshines/utils/union_interval'
 module Monkeyshines
