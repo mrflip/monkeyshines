@@ -159,7 +159,6 @@ module Monkeyshines
       # Return true if the next request would be pointless (true if, perhaps, the
       # response had no items, or the API page limit is reached)
       def is_last? response, page
-        # Log.debug(['reached prev:', prev_span, sess_span].inspect) if unscraped_span.empty?
         sess_span.include?(prev_max) || super(response, page)
       end
 
@@ -183,7 +182,6 @@ module Monkeyshines
       def before_pagination
         self.sess_items    ||= 0
         super
-        # p [self, self.scheduling]
       end
 
       #
@@ -191,8 +189,8 @@ module Monkeyshines
       #
       def after_fetch response, page
         super response, page
-        p [response.items.map{|item| item['id']}.max, response.items.map{|item| item['id']}.min, prev_max, sess_span, response.parsed_contents.slice('max_id','next_page')]
         update_counts(response) if (response && response.items)
+        # p [response.items.map{|item| item['id']}.max, response.items.map{|item| item['id']}.min, prev_max, sess_span, response.parsed_contents.slice('max_id','next_page')]
         # p response.items.map{|item| ("%6.2f" % [Time.now - Time.parse(item['created_at'])])}
       end
 
@@ -242,12 +240,16 @@ module Monkeyshines
         new_period      = (target_items_per_job / new_items_rate)
         new_delay       = new_period - since_start
 
-        puts %Q{rates %6.3f %6.3f => %6.3f delay %5.2f %5.2f => %5.2f (%5.2f) want %d sess %d items/%5.1fs -- %10d < %10d -- %s } %
-          [sess_items_rate, prev_items_rate, new_items_rate,
-          target_items_per_job / sess_items_rate, self.delay, new_period, new_delay,
-          target_items_per_job, sess_items, sess_timespan.size.to_f,
-          sess_span.max, prev_max, 
-          self.key]
+        # puts %Q{rates %6.3f %6.3f => %6.3f delay %5.2f %5.2f => %5.2f (%5.2f) want %d sess %d items/%5.1fs -- %10d < %10d -- %s } %
+        #   [sess_items_rate, prev_items_rate, new_items_rate,
+        #   target_items_per_job / sess_items_rate, self.delay, new_period, new_delay,
+        #   target_items_per_job, sess_items, sess_timespan.size.to_f,
+        #   sess_span.max, prev_max, 
+        #   self.key]
+        
+        Log.info(
+          %Q{resched\tit %4d\t%7.3f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%s } %
+          [sess_items, sess_timespan.size.to_f, target_items_per_job / sess_items_rate, self.delay, new_period, new_delay, self.key])
         
         self.delay           = new_delay.to_f.clamp(RATE_PARAMETERS[:min_resched_delay], RATE_PARAMETERS[:max_resched_delay])
         self.prev_items_rate = new_items_rate
