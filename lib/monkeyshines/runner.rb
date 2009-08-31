@@ -40,7 +40,6 @@ module Monkeyshines
     end
 
     def create_source
-      p options[:source]
       Monkeyshines::RequestStream.create(options[:source])
     end
 
