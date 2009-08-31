@@ -13,10 +13,3 @@ module Monkeyshines
     Logger.new dest
   end
 end
-
-#
-# A convenient logger.
-#
-# Define NO_MONKEYSHINES_LOG (or define Log yourself) to prevent its creation
-#
-Log = Monkeyshines.logger unless (defined?(Log) || defined?(NO_MONKEYSHINES_LOG))

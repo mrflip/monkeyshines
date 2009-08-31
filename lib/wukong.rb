@@ -1,1 +1,0 @@
-../../wukong/lib/wukong.rb

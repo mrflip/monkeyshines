@@ -1,16 +1,21 @@
 module Monkeyshines
-
   def self.url_encode str
     return '' if str.blank?
     str = str.gsub(/ /, '+')
     Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
   end
+end
 
+module Monkeyshines
   #
   # Base class for Scrape requests
   #
   module ScrapeRequestCore
-    autoload :SignedUrl, 'monkeyshines/scrape_request/signed_url'
+
+    autoload :SignedUrl,          'monkeyshines/scrape_request/signed_url'
+    autoload :Paginated,          'monkeyshines/scrape_request/paginated'
+    autoload :Paginating,         'monkeyshines/scrape_request/paginated'
+    autoload :PaginatedWithLimit, 'monkeyshines/scrape_request/paginated'
 
     def initialize *args
       super *args

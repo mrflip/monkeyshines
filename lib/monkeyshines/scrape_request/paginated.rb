@@ -1,115 +1,184 @@
+require 'time'
+require 'monkeyshines/utils/union_interval'
 module Monkeyshines
-  module Paginated
-  end
+  module ScrapeRequestCore
 
-  module PaginatedTimeline
-    # Soft limit on the number of pages to scrape.
     #
-    # Typically, leave this set to the hard_request_limit if you don't know
-    # beforehand how many pages to scrape, and override is_last? to decide when
-    # to stop short of the API limit
+    # Paginated lets you make repeated requests to collect a timeline or
+    # collection of items.
     #
-    def max_pages
-      mp = fudge_factor * (n_items - prev_scraped_items) / items_per_page
-      return 0 if mp == 0
-      (mp+1).clamp(1, hard_request_limit).to_i
-    end
-    # inject class variables
-    def self.included base
-      base.class_eval do
-        include Monkeyshines::Paginated
+    # You will typically want to set the
+    #
+    # A Paginated-compatible ScrapeRequest should inherit from or be compatible
+    # with +Monkeyshines::ScrapeRequest+ and additionally define
+    # * [#items]  list of individual items in the response; +nil+ if there was an
+    #   error, +[]+ if the response was well-formed but returned no items.
+    # * [#num_items] number of items from this response
+    # * [#span] the range of (typically) IDs within this scrape. Used to know when
+    #   we've reached results from previous session
+    #
+    #
+    module Paginated
+      #
+      # Soft limit on the number of pages to scrape.
+      #
+      # If we know the max_total_items, use it to set the number of pages;
+      # otherwise, let it run up to the hard limit.
+      #
+      # Typically, use this to set an upper limit that you know beforehand, and
+      # use #is_last? to decide based on the results
+      #
+      def max_pages
+        return hard_request_limit if (!max_total_items)
+        (max_total_items.to_f / max_items).ceil.clamp(0, hard_request_limit)
+      end
+
+      # inject class variables
+      def self.included base
+        base.class_eval do
+          # Hard request limit: do not in any case exceed this number of requests
+          class_inheritable_accessor :hard_request_limit
+
+          # max items per page the API might return
+          class_inheritable_accessor :max_items
+
+          # Total items in all requests, if known ahead of time -- eg. a
+          # twitter_user's statuses_count can be used to set the max_total_items
+          # for TwitterUserTimelineRequests
+          attr_accessor :max_total_items
+        end
+      end
+    end # module Paginated
+
+    module Paginating
+      #
+      # Generates request for each page to be scraped.
+      #
+      # The includer must define a #request_for_page(job, page) method.
+      #
+      # * request is generated
+      # * ... and yielded to the call block. (which must return the fulfilled
+      #   scrape_request response.)
+      # * after_fetch method chain invoked
+      #
+      # Scraping stops when is_last?(response, page) is true
+      #
+      def each_request job={}, &block
+        before_pagination(job)
+        (1..hard_request_limit).each do |page|
+          request = request_for_page(job, page)
+          response = yield request
+          after_fetch(job, response, page)
+          break if is_last?(job, response, page)
+        end
+        after_pagination(job)
+      end
+
+      # return true if the next request would be pointless (true if, perhaps, the
+      # response had no items, or the API page limit is reached)
+      def is_last? job, response, page
+        ( (page >= response.max_pages) ||
+          (response && response.healthy? && (response.num_items < response.max_items)) )
+      end
+
+      # Bookkeeping/setup preceding pagination
+      def before_pagination job
+      end
+
+      # Finalize bookkeeping at conclusion of scrape_job.
+      def after_pagination job
+      end
+
+      # Feed back info from the fetch
+      def after_fetch job, response, page
+      end
+
+      # inject class variables
+      def self.included base
+        base.class_eval do
+          # Hard request limit: do not in any case exceed this number of requests
+          class_inheritable_accessor :hard_request_limit
+        end
+      end
+    end # module Paginating
+
+    #
+    # Scenario: you request paginated search requests with a limit parameter (a
+    # max_id or min_id, for example).
+    #
+    # * request successive pages,
+    # * use info on the requested page to set the next limit parameter
+    # * stop when max_pages is reached or a successful request gives fewer than
+    #   max_items
+    #
+    #
+    # The first
+    #
+    #    req?min_id=1234&max_id=
+    #    => [ [8675, ...], ..., [8012, ...] ] # 100 items
+    #    req?min_id=1234&max_id=8011
+    #    => [ [7581, ...], ..., [2044, ...] ] # 100 items
+    #    req?min_id=1234&max_id=2043
+    #    => [ [2012, ...], ..., [1234, ...] ] #  69 items
+    #
+    # * The search terminates when
+    # ** max_requests requests have been made, or
+    # ** the limit params interval is zero,    or
+    # ** a successful response with fewer than max_items is received.
+    #
+    # * You will want to save <req?min_id=8676&max_id=""> for later scrape
+    #
+    module PaginatedWithLimit
+
+      # Set up bookkeeping for pagination tracking
+      def before_pagination job
+        self.sess_items    ||= 0
+        self.sess_span       = UnionInterval.new
+        self.sess_timespan   = UnionInterval.new
+        super job
+      end
+
+      #
+      # Feed back info from the scrape
+      #
+      def after_fetch job, response, page
+        super job, response, page
+        return unless response && response.items
+        # count_new_items response
+        p [response.items.map{|item| item['id']}.max, response.items.map{|item| item['id']}.min, job.prev_max, sess_span, response.parsed_contents.slice('max_id','next_page')]
+        update_spans response
+      end
+
+      def update_spans response
+        # Update intervals
+        self.sess_span     << response.span
+        self.sess_timespan << response.timespan
+      end
+
+      # Return true if the next request would be pointless (true if, perhaps, the
+      # response had no items, or the API page limit is reached)
+      def is_last? job, response, page
+        # Log.debug(['reached prev:', prev_span, sess_span].inspect) if unscraped_span.empty?
+        sess_span.include?(job.prev_max) || super(job, response, page)
+      end
+
+      def after_pagination job
+        # self.prev_items    = prev_items.to_i + sess_items.to_i
+        # self.new_items     = sess_items.to_i + new_items.to_i
+        job.prev_max       = [job.prev_max, sess_span.max].compact.max
+        self.sess_items    = 0
+        self.sess_span     = UnionInterval.new
+        super
+      end
+
+      # inject class variables
+      def self.included base
+        base.class_eval do
+          # Span of items gathered in this scrape scrape_job.
+          attr_accessor :sess_items, :sess_span, :sess_timespan
+        end
       end
     end
 
-    # #
-    # # Threshold count-per-page and actual count to get number of expected pages.
-    # # Cap the request with max
-    # def pages_from_count per_page, count, max=nil
-    #   num = [ (count.to_f / per_page.to_f).ceil, 0 ].max
-    #   [num, max].compact.min
-    # end
   end
-
-  module PaginatedWithRateAndLimit
-
-    def after_pagination
-      # piw = [(prev_items.to_f ** 0.66), (items_per_page * hard_request_limit * 4.0)].min
-      # puts ([Time.now.strftime("%M:%S"), "%-23s"%query_term] + [prev_rate, sess_rate, avg_rate, sess_timespan.size.to_f, prev_items, sess_items, piw, (1000/avg_rate)].map{|s| "%15.4f"%(s||0) }).join("\t") rescue nil
-      self.prev_rate     = avg_rate
-      if sess_items == (hard_request_limit * items_per_page)
-        # bump the rate if we hit the hard cap:
-        new_rate = [prev_rate * 1.25, 1000/120.0].max
-        Log.info "Bumping rate on #{query_term} from #{prev_rate} to #{new_rate}"
-        self.prev_rate = new_rate
-      end
-      self.prev_items    = prev_items.to_i + sess_items.to_i
-      self.prev_span     = sess_span + prev_span
-      self.new_items     = sess_items.to_i + new_items.to_i
-      self.sess_items    = 0
-      self.sess_span     = UnionInterval.new
-      self.sess_timespan = UnionInterval.new
-      super
-    end
-
-    #
-    # Feed back info from the scrape
-    #
-    def after_fetch response, page
-      super response, page
-      return unless response && response.items
-      count_new_items response
-      update_spans response
-    end
-
-    # account for additional items
-    def count_new_items response
-      num_items = response.num_items
-      # if there was overlap with a previous scrape, we have to count the items by hand
-      prev_span = self.prev_span
-      if prev_span.max && response.span && (response.span.min < prev_span.max)
-        num_items = response.items.inject(0){|n,item| (prev_span.include? item['id']) ? n : n+1 }
-      end
-      self.sess_items += num_items
-    end
-
-    def update_spans response
-      # Update intervals
-      self.sess_span     << response.span
-      self.sess_timespan << response.timespan
-    end
-
-    # gap between oldest scraped in this scrape_job and last one scraped in
-    # previous scrape_job.
-    def unscraped_span
-      UnionInterval.new(prev_span_max, sess_span.min)
-    end
-    # span of previous scrape
-    def prev_span
-      @prev_span ||= UnionInterval.new(prev_span_min, prev_span_max)
-    end
-    def prev_span= min_max
-      self.prev_span_min, self.prev_span_max = min_max.to_a
-      @prev_span = UnionInterval.new(prev_span_min, prev_span_max)
-    end
-
-    def sess_rate
-      return nil if (!sess_timespan) || (sess_timespan.size == 0)
-      sess_items.to_f / sess_timespan.size.to_f
-    end
-    #
-    # How often an item rolls in, on average
-    #
-    def avg_rate
-      return nil if (sess_items.to_f == 0 && (prev_rate.blank? || prev_items.to_f == 0))
-      prev_weight = prev_items.to_f ** 0.66
-      sess_weight = sess_items.to_f
-      prev_weight = [prev_weight, sess_weight*3].min if sess_weight > 0
-      weighted_sum = (
-        (prev_rate.to_f * prev_weight) + # damped previous avg
-        (sess_rate.to_f * sess_weight) ) # current avg
-      rt = weighted_sum / (prev_weight + sess_weight)
-      rt
-    end
-  end
-
 end

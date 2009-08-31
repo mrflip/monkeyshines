@@ -61,13 +61,22 @@ module Monkeyshines
     # Options appearing later win out.
     #
     def prepare_options *options_hashes
-      self.class.load_cmdline_options!
       self.options = Hash.deep_sum(
         Monkeyshines::Runner::DEFAULT_OPTIONS,
         Monkeyshines::CONFIG,
         *options_hashes
         )
     end
+
+
+    def self.define_cmdline_options &block
+      yield :handle,          "Identifying string for scrape",     :type => String, :required => true
+      yield :source_filename, "URI for scrape store to load from", :type => String
+      yield :dest_filename,   "Filename for results",              :type => String
+      yield :log_dest,        "Log file location",                 :type => String
+      # yield :dest_cache_uri,  "URI for cache server",              :type => String
+    end
+
 
     #
     # * For each entry in #source,
@@ -143,7 +152,8 @@ module Monkeyshines
     #
     def setup_main_log
       unless options[:log][:dest].blank?
-        log_file = "%s/log/%s" % [WORK_DIR.expand_path, options[:log][:dest]]
+        log_file = "%s/log/%s" % [WORK_DIR, options[:log][:dest]]
+        FileUtils.mkdir_p(File.dirname(log_file))
         $stdout = $stderr = File.open( log_file+"-console.log", "a" )
       end
     end
