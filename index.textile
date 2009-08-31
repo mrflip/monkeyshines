@@ -13,7 +13,7 @@ p(description). {{ site.description }}
 
 h2. How to write a Monkeyshines Scraper
 
-</div><div class="toggle">
+&nbsp;</div><div class="toggle"></p>
 
 h2. More info
 
@@ -25,6 +25,6 @@ Philip (flip) Kromer (flip@infochimps.org)
 
 Patches submitted by:
 
-</div>
+&nbsp;</div>
 
 {% include news.html %}
