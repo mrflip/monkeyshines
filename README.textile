@@ -10,6 +10,38 @@ A monkeyshines scraper is simple in principle:
 
 
 
+h2. Dependencies
+
+This is best run standalone -- not as a gem; it's still in heavy development. I recommend cloning
+
+* http://github.com/mrflip/edamame
+* http://github.com/mrflip/wuclan
+* http://github.com/mrflip/wukong
+* http://github.com/mrflip/monkeyshines (this repo)
+
+into a common directory.
+
+Additionally, you'll need some of these gems:
+
+* addressable (2.1.0)
+* extlib (0.9.12)
+* htmlentities (4.2.0)
+
+To build the gem, you'll need
+
+* git (1.2.2)
+* jeweler (1.2.1)
+* rake (0.8.7)
+* rspec (1.2.6)
+* rubyforge (1.0.4)
+* sources (0.0.1)
+
+And if you spell ruby with a 'j', you'll want
+
+* jruby-openssl (0.5.2)
+* json-jruby (1.1.7)
+
+
 
 
 h2. Request Queue
