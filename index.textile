@@ -9,11 +9,11 @@ h1(gemheader). Monkeyshines %(small):: scraper%
 
 p(description). {{ site.description }}
 
-<div class="toggle">
+<notextile><div class="toggle"></notextile>
 
 h2. How to write a Monkeyshines Scraper
 
-&nbsp;</div><div class="toggle"></p>
+&nbsp;<notextile></div><div class="toggle"></p></notextile>
 
 h2. More info
 
@@ -25,6 +25,6 @@ Philip (flip) Kromer (flip@infochimps.org)
 
 Patches submitted by:
 
-&nbsp;</div>
+&nbsp;<notextile></div></notextile>
 
 {% include news.html %}

@@ -6,33 +6,33 @@ title:  Usage notes
 h1(gemheader). {{ site.gemname }} %(small):: usage%
 
 
-<div class="toggle">
+<notextile><div class="toggle"></notextile>
 
 h2. How to run
 
-</div><div class="toggle">
+<notextile></div><div class="toggle"></notextile>
 
 h2. How to test 
 
-</div><div class="toggle">
+<notextile></div><div class="toggle"></notextile>
 
 h2. Design
 
 ...
 
-</div><div class="toggle">
+<notextile></div><div class="toggle"></notextile>
 
 h2. Caveats
 
 ...
 
-</div><div class="toggle">
+<notextile></div><div class="toggle"></notextile>
 
 h2. TODOs
 
 ...
 
-</div><div class="toggle">
+<notextile></div><div class="toggle"></notextile>
 
 h2. Note on Patches/Pull Requests
 
@@ -42,9 +42,9 @@ h2. Note on Patches/Pull Requests
 * Commit, do not mess with rakefile, version, or history. (if you want to have your own version, that is fine but  bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request. Bonus points for topic branches.
 
-</div><div class="toggle">
+<notextile></div><div class="toggle"></notextile>
 
 h2. Endnotes
 
-</div>
+<notextile></div></notextile>
 
