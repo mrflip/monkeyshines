@@ -68,10 +68,10 @@ module Monkeyshines
       #
       # Scraping stops when is_last?(response, page) is true
       #
-      def each_request &block
+      def each_request info=nil, &block
         before_pagination()
         (1..hard_request_limit).each do |page|
-          request  = request_for_page(page)
+          request  = request_for_page(page, info)
           response = yield request
           after_fetch(response, page)
           break if is_last?(response, page)
