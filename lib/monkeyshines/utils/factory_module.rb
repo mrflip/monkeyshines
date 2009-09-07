@@ -65,9 +65,13 @@ module FactoryModule
         else plan
         end
       end
+
     end
   end
 
+  def get_class klass_name
+    FactoryModule.get_class self, klass_name
+  end
 
   FACTORY_CLASSES = {}
   def self.get_class scope, klass_name
@@ -75,7 +79,11 @@ module FactoryModule
     if klass_name.is_a? Class
       klass = klass_name
     else
-      klass = scope.find_const(klass_name.to_s.camelize)
+      begin
+        klass = scope.find_const(klass_name.to_s.camelize)
+      rescue NameError => e
+        raise "Can't find #{klass_name.inspect} in #{scope}"
+      end
     end
     # find_const from wukong/extensions/module via extlib
     FACTORY_CLASSES[ [scope, klass_name] ] = klass
