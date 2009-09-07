@@ -83,7 +83,10 @@ module Monkeyshines
       # response had no items, or the API page limit is reached)
       def is_last? response, page
         ( (page >= response.max_pages) ||
-          (response && response.healthy? && (response.num_items < response.max_items)) )
+          (response && response.healthy? && partial_response?(response)) )
+      end
+      def partial_response response
+        (response.num_items < response.max_items)
       end
 
       # Bookkeeping/setup preceding pagination
@@ -198,7 +201,7 @@ module Monkeyshines
       def update_counts response
         self.sess_items += response.num_items
       end
-      
+
       RATE_PARAMETERS = {
         :max_session_timespan  => (60 * 60 * 24 * 5), # 5 days
         :default_scrape_period => (60 * 60 * 2     ), # 2 hours
@@ -206,8 +209,8 @@ module Monkeyshines
         :min_resched_delay     => (5),                # 5 seconds
         :sess_weight_slowing   => 0.35,  # how fast to converge when rate < average
         :sess_weight_rising    => 1.0,   # how fast to converge when rate > average
-      } 
-      
+      }
+
       #
       # * session returns one result
       # * session returns no result
@@ -217,18 +220,18 @@ module Monkeyshines
         # If there's no good session timespan, we can fake one out
         self.sess_timespan.max ||= Time.now.utc
         self.sess_timespan.min ||= self.last_run
-        # Whatever its origin, limit the session timespan 
+        # Whatever its origin, limit the session timespan
         if sess_timespan.size > RATE_PARAMETERS[:max_session_timespan]
           sess_timespan.min = sess_timespan.max - RATE_PARAMETERS[:max_session_timespan]
         end
         # Find the items rate
         sess_items_rate = sess_items.to_f / sess_timespan.size.to_f
-        
+
         if self.prev_items_rate.blank?
           self.prev_items_rate = target_items_per_job.to_f / RATE_PARAMETERS[:default_scrape_period]
           self.delay           = target_items_per_job / prev_items_rate
-        end        
-        
+        end
+
         # New items rate is a weighted average of new and old
         #
         # If new rate is faster than the prev_rate, we use a high weight
@@ -244,18 +247,18 @@ module Monkeyshines
         #   [sess_items_rate, prev_items_rate, new_items_rate,
         #   target_items_per_job / sess_items_rate, self.delay, new_period, new_delay,
         #   target_items_per_job, sess_items, sess_timespan.size.to_f,
-        #   sess_span.max, prev_max, 
+        #   sess_span.max, prev_max,
         #   self.key]
-        
+
         Log.info(
           %Q{resched\tit %4d\t%7.3f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%s } %
           [sess_items, sess_timespan.size.to_f, target_items_per_job / sess_items_rate, self.delay, new_period, new_delay, self.key])
-        
+
         self.delay           = new_delay.to_f.clamp(RATE_PARAMETERS[:min_resched_delay], RATE_PARAMETERS[:max_resched_delay])
         self.prev_items_rate = new_items_rate
         self.prev_items      = new_total_items
       end
-      
+
       #
       # Recalculate the item rates
       # using the accumulated response
@@ -265,7 +268,7 @@ module Monkeyshines
         self.sess_items    = 0
         super
       end
-      
+
       # inject class variables
       def self.included base
         base.class_eval do

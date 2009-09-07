@@ -4,6 +4,17 @@ module Monkeyshines
     str = str.gsub(/ /, '+')
     Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
   end
+
+  XML_ENCODED_BADNESS = { "\r" => "&#13;", "\n" => "&#10;", "\t" => "&#9;" }
+  #
+  # Takes an already-encoded XML string and replaces ONLY the characters in
+  # XML_ENCODED_BADNESS (by default, \r newline, \n carriage return and \t tab)
+  # with their XML encodings (&#10; and so forth).  Doesn't do any other
+  # encoding, and leaves exiting entities alone.
+  #
+  def self.scrub_xml_encoded_badness str
+    str.chomp.gsub(/[\r\n\t]/){|c| BAD_CHARS[c]}
+  end
 end
 
 module Monkeyshines
@@ -48,11 +59,9 @@ module Monkeyshines
       self.url = make_url
     end
 
-    BAD_CHARS = { "\r" => "&#13;", "\n" => "&#10;", "\t" => "&#9;" }
-    # BAD_CHARS = { "\r" => "\n!!cr!!\n", "\n" => "\n!!newl!!\n", "\t" => "\n!!tab!!\n" }
     def response= response
       return unless response
-      self.contents = response.body.chomp.gsub(/[\r\n\t]/){|c| BAD_CHARS[c]}
+      self.contents = Monkeyshines.scrub_xml_encoded_badness(response.body)
     end
 
     def url_encode str

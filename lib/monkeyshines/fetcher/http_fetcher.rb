@@ -2,33 +2,32 @@ require 'net/http'
 Net::HTTP.version_1_2
 module Monkeyshines
   module Fetcher
-
-    #
-    # Notes:
-    #
-    # On HTTP:
-    # * "RFC 2616 (HTTP/1.1)":http://tools.ietf.org/html/rfc2616
-    # * "Header Fields":http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
-    # * "Notes on Keep-Alive":http://www.hpl.hp.com/personal/ange/archives/archives-95/http-wg-archive/1661.html
-    #
-    # * "right_http_connection is another HTTP lib":http://github.com/rightscale/right_http_connection/tree/master/lib/right_http_connection.rb
-
-
     #
     # Opens a persistent connection and makes repeated requests.
     #
     # * authentication
     # * backoff and logging on client or server errors
     #
-    class HttpFetcher
-      # amount to throttle non-persistent connections.
+    class HttpFetcher < Base
+
+      #
+      # Notes:
+      #
+      # On HTTP:
+      # * "RFC 2616 (HTTP/1.1)":http://tools.ietf.org/html/rfc2616
+      # * "Header Fields":http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+      # * "Notes on Keep-Alive":http://www.hpl.hp.com/personal/ange/archives/archives-95/http-wg-archive/1661.html
+      #
+      # * "right_http_connection is another HTTP lib":http://github.com/rightscale/right_http_connection/tree/master/lib/right_http_connection.rb
+
+      # amount to throttle non-persistent connections:
+      # if http is
       CNXN_SLEEP_TIME = 0.5
       # Default user agent presented to servers
       USER_AGENT = "Net::HTTP #{RUBY_VERSION}"
-      attr_accessor :connection_opened_at, :username, :password, :http_req_options, :options
-
-      def initialize options={}
-        self.options  = options
+      attr_accessor :connection_opened_at, :username, :password, :http_req_options
+      def initialize _options={}
+        super _options
         self.username = options[:username]
         self.password = options[:password]
         self.http_req_options = {}
@@ -112,7 +111,7 @@ module Monkeyshines
           Log.warn e
           raise e
         end
-        scrape_request.scraped_at = Time.now.utc.to_flat
+        scrape_request.scraped_at = self.class.timestamp
         scrape_request
       end
 
