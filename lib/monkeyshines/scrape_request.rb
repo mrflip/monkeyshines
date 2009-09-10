@@ -1,3 +1,4 @@
+require 'digest/md5'
 module Monkeyshines
   def self.url_encode str
     return '' if str.blank?

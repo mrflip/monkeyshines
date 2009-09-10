@@ -16,19 +16,19 @@ module Monkeyshines
         super _options.deep_merge( :tube => tube )
       end
 
-      def each klass, &block
-        work(queue_request_timeout, klass) do |job|
-          job.each_request(&block)
-        end
-        Log.info [queue, queue.beanstalk_stats]
-      end
-
-      # def each &block
-      #   work(queue_request_timeout) do |job|
-      #     yield job.obj['type'], job.obj
+      # def each klass, &block
+      #   work(queue_request_timeout, klass) do |job|
+      #     job.each_request(&block)
       #   end
       #   Log.info [queue, queue.beanstalk_stats]
       # end
+
+      def each &block
+        work(queue_request_timeout) do |job|
+          yield job.obj['type'], job.obj
+        end
+        Log.info [queue, queue.beanstalk_stats]
+      end
 
       def req_to_job req, job_options={}
         obj_hash = req.to_hash.merge(
