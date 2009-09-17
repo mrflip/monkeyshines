@@ -1,5 +1,13 @@
 require 'monkeyshines/utils/trollop'
 module Monkeyshines
+
+  CMDLINE_OPTIONS = [
+    [:handle,          "Identifying string for scrape",     { :type => String, :required => true } ],
+    [:source_filename, "URI for scrape store to load from", { :type => String                    } ],
+    [:dest_filename,   "Filename for results",              { :type => String                    } ],
+    [:log_dest,        "Log file location",                 { :type => String                    } ],
+  ]
+
   #
   # Load the YAML file ~/.monkeyshines
   # and toss it into Monkeyshines::CONFIG
@@ -38,10 +46,11 @@ module Monkeyshines
     result
   end
 
-  # Let all the participants inject trollop command-line arguments
+  # Use the trollop options defined in Monkeyshines::CMDLINE_OPTIONS
+  # to extract command-line args
   def self.get_cmdline_args
     cmdline = Trollop::Parser.new
-    Monkeyshines::Runner.define_cmdline_options do |*args|
+    Monkeyshines::CMDLINE_OPTIONS.each do |args|
       cmdline.opt *args
     end
     Trollop::do_parse_args(cmdline)

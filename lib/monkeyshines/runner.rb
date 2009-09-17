@@ -67,16 +67,6 @@ module Monkeyshines
         )
     end
 
-
-    def self.define_cmdline_options &block
-      yield :handle,          "Identifying string for scrape",     :type => String, :required => true
-      yield :source_filename, "URI for scrape store to load from", :type => String
-      yield :dest_filename,   "Filename for results",              :type => String
-      yield :log_dest,        "Log file location",                 :type => String
-      # yield :dest_cache_uri,  "URI for cache server",              :type => String
-    end
-
-
     #
     # * For each entry in #source,
     # ** create scrape_request(s)
