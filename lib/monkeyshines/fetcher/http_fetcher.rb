@@ -92,7 +92,7 @@ module Monkeyshines
         when Net::HTTPServerError         then sleep_time = 2 # 5xx All other server errors
         else                              sleep_time = 1
         end
-        Log.warn "Received #{response.code}, sleeping #{sleep_time} ('#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at})"
+        Log.warn "Received #{response.code}, sleeping #{sleep_time} (#{response.head.to_json} --'#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at})"
         sleep sleep_time
       end
 
