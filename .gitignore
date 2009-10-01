@@ -30,3 +30,4 @@ pkg
 .tasks-cache
 *.tmproj
 /**/*private*
+*_flymake.*

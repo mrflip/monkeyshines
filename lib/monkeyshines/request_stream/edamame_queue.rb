@@ -14,6 +14,10 @@ module Monkeyshines
       def initialize _options
         tube = Monkeyshines::CONFIG[:handle].to_s.gsub(/_/, '-')
         super _options.deep_merge( :tube => tube )
+        if _options[:queue_request_timeout] 
+          Log.info "Setting timeout to #{_options[:queue_request_timeout]}"
+          self.queue_request_timeout = _options[:queue_request_timeout]
+        end
       end
 
       # def each klass, &block
