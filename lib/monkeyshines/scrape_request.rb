@@ -6,6 +6,12 @@ module Monkeyshines
     Addressable::URI.encode_component(str, Addressable::URI::CharacterClasses::UNRESERVED+'+')
   end
 
+  def self.url_decode str
+    return '' if str.blank?
+    str = str.gsub(/\+/, ' ')
+    Addressable::URI.unencode(str)
+  end
+
   XML_ENCODED_BADNESS = { "\r" => "&#13;", "\n" => "&#10;", "\t" => "&#9;" }
   #
   # Takes an already-encoded XML string and replaces ONLY the characters in
@@ -14,7 +20,7 @@ module Monkeyshines
   # encoding, and leaves exiting entities alone.
   #
   def self.scrub_xml_encoded_badness str
-    str.chomp.gsub(/[\r\n\t]/){|c| BAD_CHARS[c]}
+    str.chomp.gsub(/[\r\n\t]/){|c| XML_ENCODED_BADNESS[c]}
   end
 end
 

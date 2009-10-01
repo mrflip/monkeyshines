@@ -224,14 +224,19 @@ module Monkeyshines
         if sess_timespan.size > RATE_PARAMETERS[:max_session_timespan]
           sess_timespan.min = sess_timespan.max - RATE_PARAMETERS[:max_session_timespan]
         end
-        self.sess_items = 2 if self.sess_items.to_f < 2
-        # Find the items rate
-        sess_items_rate = self.sess_items.to_f / sess_timespan.size.to_f
-
+        # Find and limit the session items rate
+        if self.sess_items.to_f < 2
+          self.sess_items = 2
+          sess_items_rate = self.sess_items.to_f / RATE_PARAMETERS[:default_scrape_period]
+        else
+          # Find the items rate
+          sess_items_rate = self.sess_items.to_f / sess_timespan.size.to_f
+        end
+        # Find and limit the previous items rate
         self.prev_items_rate = self.prev_items_rate.to_i rescue 0
         if self.prev_items_rate == 0
           self.prev_items_rate = target_items_per_job.to_f / RATE_PARAMETERS[:default_scrape_period]
-          self.delay           = target_items_per_job / prev_items_rate
+          self.delay           = RATE_PARAMETERS[:default_scrape_period].to_f
         end
 
         # New items rate is a weighted average of new and old
