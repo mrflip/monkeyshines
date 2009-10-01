@@ -13,6 +13,7 @@ module Monkeyshines
         Log.debug "New #{self.class} as #{options.inspect}"
         self.filename = options[:filename] or raise "Missing filename in #{self.class}"
         self.filemode = options[:filemode] || 'r'
+        skip!(options[:skip]) if options[:skip]
       end
 
       #

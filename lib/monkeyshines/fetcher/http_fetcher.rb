@@ -82,14 +82,14 @@ module Monkeyshines
         # Response-based sleep time
         sleep_time = 0
         case response
-        when Net::HTTPSuccess             then return         # 2xx
-        when Net::HTTPRedirection         then return         # 3xx
-        when Net::HTTPBadRequest          then sleep_time = 5 # 400 (rate limit, probably)
-        when Net::HTTPUnauthorized        then sleep_time = 0 # 401 (protected user, probably)
-        when Net::HTTPForbidden           then sleep_time = 4 # 403 update limit
-        when Net::HTTPNotFound            then sleep_time = 0 # 404 deleted
-        when Net::HTTPServiceUnavailable  then sleep_time = 4 # 503 Fail Whale
-        when Net::HTTPServerError         then sleep_time = 2 # 5xx All other server errors
+        when Net::HTTPSuccess             then return          # 2xx
+        when Net::HTTPRedirection         then return          # 3xx
+        when Net::HTTPBadRequest          then sleep_time =  5 # 400 (rate limit, probably)
+        when Net::HTTPUnauthorized        then sleep_time =  0 # 401 (protected user, probably)
+        when Net::HTTPForbidden           then sleep_time =  4 # 403 update limit
+        when Net::HTTPNotFound            then sleep_time =  0 # 404 deleted
+        when Net::HTTPServiceUnavailable  then sleep_time =  9 # 503 Fail Whale
+        when Net::HTTPServerError         then sleep_time =  2 # 5xx All other server errors
         else                              sleep_time = 1
         end
         Log.warn "Received #{response.code}, sleeping #{sleep_time} ('#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at})"
@@ -104,7 +104,7 @@ module Monkeyshines
           scrape_request.response_message = response.message[0..200].gsub(/[\n\r\t]+/, ' ')
           scrape_request.response         = response
           backoff response
-        rescue StandardError, Timeout::Error => e
+        rescue StandardError, SignalException, Timeout::Error => e
           Log.warn ["Recovering from fetcher error:", e.to_s, scrape_request.inspect[0..2000].gsub(/[\n\r]+/, ' ')].join("\t")
           close # restart the connection
         rescue Exception => e
