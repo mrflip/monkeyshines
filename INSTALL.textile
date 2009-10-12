@@ -9,20 +9,29 @@ h1(gemheader). {{ site.gemname }} %(small):: install%
 
 h2. Get the code
 
-This code is available as a gem:
-
-pre. $ sudo gem install mrflip-{{ site.gemname }}
-
-You can instead download this project in either "zip":http://github.com/mrflip/{{ site.gemname }}/zipball/master or "tar":http://github.com/mrflip/{{ site.gemname }}/tarball/master formats.
-
-Better yet, you can also clone the project with "Git":http://git-scm.com by running:
+We're still actively developing {{ site.gemname }}.  The newest version is available via "Git":http://git-scm.com on "github:":http://github.com/mrflip/{{ site.gemname }}
 
 pre. $ git clone git://github.com/mrflip/{{ site.gemname }}
+
+A gem is available from "gemcutter:":http://gemcutter.org/gems/{{ site.gemname }}
+
+pre. $ sudo gem install {{ site.gemname }} --source=http://gemcutter.org
+
+(don't use the gems.github.com version -- it's way out of date.)
+
+You can instead download this project in either "zip":http://github.com/mrflip/{{ site.gemname }}/zipball/master or "tar":http://github.com/mrflip/{{ site.gemname }}/tarball/master formats.
 
 <notextile></div><div class="toggle"></notextile>
 
 h2. Get the Dependencies
 
+ {{ site.gemname }} depends on the following gems:
+* "wukong":http://mrflip.github.com/wukong
+* extlib
+* addressable
+* uuid
+
+It should be straightforward to strip out those dependencies if you need to run lean.
 
 <notextile></div><div class="toggle"></notextile>
 
