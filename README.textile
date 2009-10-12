@@ -2,15 +2,7 @@ Monkeyshines is a tool for doing an algorithmic scrape.
 
 It's designed to handle large-scale scrapes that may exceed the capabilities of single-machine relational databases, so it plays nicely with Hadoop / Wukong, with distributed databases (MongoDB, tokyocabinet, etc.), and distributed job queue (eg "edamame/beanstalk":http://mrflip.github.com/edamame).
 
----------------------------------------------------------------------------
-
-h2. Overview
-
-A monkeyshines scraper is simple in principle:
-
-
-
-h2. Dependencies
+h2. Install
 
 This is best run standalone -- not as a gem; it's still in heavy development. I recommend cloning
 
@@ -27,22 +19,18 @@ Additionally, you'll need some of these gems:
 * extlib (0.9.12)
 * htmlentities (4.2.0)
 
-To build the gem, you'll need
-
-* git (1.2.2)
-* jeweler (1.2.1)
-* rake (0.8.7)
-* rspec (1.2.6)
-* rubyforge (1.0.4)
-* sources (0.0.1)
-
 And if you spell ruby with a 'j', you'll want
 
 * jruby-openssl (0.5.2)
 * json-jruby (1.1.7)
 
+---------------------------------------------------------------------------
 
+h2. Help!
 
+Send Monkeyshines questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
+
+---------------------------------------------------------------------------
 
 h2. Request Queue
 
@@ -52,8 +40,6 @@ Request stream can be metered using read-through, scheduled (eg cron), or test-a
 
 * Scheduled
 * Test and sleep. A queue of resources is cyclically polled, sleeping whenever bored.
-
-
 
 h2. Requests
 
