@@ -1,1 +1,10 @@
-monkeyshines/gem.css
+h1.gemheader {
+  margin:        0px 0 0.5em -43px ; 
+  text-indent:                43px ; 
+  height:       107px ;
+  padding:      20px 0 14px 0px; 
+  background:   url('/images/monkeyshines.png') no-repeat 0px 19px ;
+  }
+p.description {
+  margin-top:   -21px;
+  }
