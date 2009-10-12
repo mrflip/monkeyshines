@@ -27,15 +27,29 @@ h2. Get the Dependencies
 
  {{ site.gemname }} depends on the following gems:
 * "wukong":http://mrflip.github.com/wukong
-* extlib
-* addressable
-* uuid
+* addressable (2.1.0)
+* extlib (0.9.12)
+* htmlentities (4.2.0)
+
+And if you spell ruby with a 'j', you'll want
+
+* jruby-openssl (0.5.2)
+* json-jruby (1.1.7)
 
 It should be straightforward to strip out those dependencies if you need to run lean.
 
 <notextile></div><div class="toggle"></notextile>
 
 h2. Setup
+
+This is best run standalone -- not as a gem; it's still in heavy development. I recommend cloning
+
+* http://github.com/mrflip/edamame
+* http://github.com/mrflip/wuclan
+* http://github.com/mrflip/wukong
+* http://github.com/mrflip/monkeyshines (this repo)
+
+into a common directory.
 
 
 <notextile></div></notextile>

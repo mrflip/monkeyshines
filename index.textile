@@ -138,13 +138,11 @@ There are many useful examples in the examples/ directory.
 
 h3. Credits
 
-Philip (flip) Kromer (flip@infochimps.org)
+{{ site.gemname }} was written by "Philip (flip) Kromer":http://mrflip.com (flip@infochimps.org / "@mrflip":http://twitter.com/mrflip) for the "infochimps project":http://infochimps.org
 
-<notextile><div class="toggle"></notextile>
+h3. Help!
 
-h2. Help!
-
-Send Monkeyshines questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
+Send {{ site.gemname }} questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
 
 <notextile></div></notextile>
 
