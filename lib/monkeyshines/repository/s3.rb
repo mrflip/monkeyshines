@@ -86,9 +86,6 @@ module Monkeyshines
       def md5(filename)
       end
 
-      def
-      end
-
       #
       # s3 interface
       #
