@@ -6,12 +6,129 @@ collapse: false
 
 h1(gemheader). Monkeyshines %(small):: scraper%
 
-
 p(description). {{ site.description }}
+
+Monkeyshines is a tool for doing an algorithmic scrape.
+
+It's designed to handle large-scale scrapes that may exceed the capabilities of single-machine relational databases, so it plays nicely with Hadoop / Wukong, with distributed databases (MongoDB, tokyocabinet, etc.), and distributed job queue (eg "edamame/beanstalk":http://mrflip.github.com/edamame).
+
+Send Monkeyshines questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
 
 <notextile><div class="toggle"></notextile>
 
-h2. How to write a Monkeyshines Scraper
+h2. Install
+
+This is best run standalone -- not as a gem; it's still in heavy development. I recommend cloning
+
+* http://github.com/mrflip/edamame
+* http://github.com/mrflip/wuclan
+* http://github.com/mrflip/wukong
+* http://github.com/mrflip/monkeyshines (this repo)
+
+into a common directory.
+
+Additionally, you'll need some of these gems:
+
+* addressable (2.1.0)
+* extlib (0.9.12)
+* htmlentities (4.2.0)
+
+To build the gem, you'll need
+
+* git (1.2.2)
+* jeweler (1.2.1)
+* rake (0.8.7)
+* rspec (1.2.6)
+* rubyforge (1.0.4)
+* sources (0.0.1)
+
+And if you spell ruby with a 'j', you'll want
+
+* jruby-openssl (0.5.2)
+* json-jruby (1.1.7)
+
+<notextile></div><div class="toggle"></notextile>
+
+h2. Request Queue
+
+h3. Periodic requests
+
+Request stream can be metered using read-through, scheduled (eg cron), or test-and-sleep.
+
+* Scheduled
+* Test and sleep. A queue of resources is cyclically polled, sleeping whenever bored.
+
+<notextile></div><div class="toggle"></notextile>
+
+h2. Requests
+
+* Base: simple fetch and store of URI. (URI specifies immutable unique resource)
+* : single resource, want to check for updates over time.
+* Timeline:
+** Message stream, eg. twitter search or user timeline. Want to do paginated requests back to last-seen 
+** Feed: Poll the resource and extract contents, store by GUID. Want to poll frequently enough that single-page request gives full coverage.
+
+<notextile></div><div class="toggle"></notextile>
+
+h2. Scraper
+
+* HttpScraper --
+** JSON
+** HTML
+*** \0 separates records, \t separates initial fields; 
+*** map \ to \\, then tab, cr and newline to \t, \r and \n resp.
+*** map tab, cr and newline to &#x9; &#xD; and &#xA; resp.
+
+
+x9 xa xd x7f
+
+* HeadScraper -- records the HEAD parameters
+
+
+<notextile></div><div class="toggle"></notextile>
+
+h2. Store 
+
+
+* Flat file (chunked)
+* Key store
+* Read-through cache
+
+
+<notextile></div><div class="toggle"></notextile>
+
+h2. Periodic
+
+* Log only every N requests, or t minutes, or whatever.
+* Restart session every hour
+* Close file and start new chunk every 4 hours or so. (Mitigates data loss if a file is corrupted, makes for easy batch processing).
+
+<notextile></div><div class="toggle"></notextile>
+
+h2. Pagination
+
+h4. Session
+
+* *Twitter Search*: Each req brings in up to 100 results in strict reverse ID (pseudo time) order. If the last item ID in a request is less than the previous scrape session's max_id, or if fewer than 100 results are returned, the scrape session is complete.  We maintain two scrape_intervals: one spans from the earliest seen search hit to the highest one from the previous scrape; the other ranges backwards from the highest in _this_ scrape session (the first item in the first successful page request) to the lowest in this scrape session (the last item on the most recent successful page request).
+
+** Set no upper limit on the first request. 
+** Request by page, holding the max_id fixed
+** Use the lowest ID from the previous request as the new max_id
+** Use the supplied 'next page' parameter
+
+* *Twitter Followers*: Each request brings in 100 followers in reverse order of when the relationship formed. A separate call to the user can tell you how many _total_ followers there are, and you can record how many there were at end of last scrape, but there's some slop (if 100 people in the middle of the list /un/follow and 100 more people at the front /follow/ then the total will be the same).  High-degree accounts may have as many as 2M followers (20,000 calls).
+
+* *FriendFeed*: Up to four pages. Expiry given by result set of <100 results.
+
+
+* Paginated: one resource, but requires one or more requests to 
+** Paginated + limit (max_id/since_date): rather than request by increasing page, request one page with a limit parameter until the last-on-page overlaps the previous scrape.  For example, say you are scraping search results, and that when you last made the request the max ID was 120_000; the current max_id is 155_000. Request the first page (no limit). Using the last result on each page as the new limit_id until that last result is less than 120_000.
+** Paginated + stop_on_duplicate: request pages until the last one on the page matches an already-requested instance.
+** Paginated + velocity_estimate: . For example, say a user acquires on average 4.1 followers/day and it has been 80 days since last scrape. With 100 followers/req you will want to request ceil( 4.1 * 80 / 100 ) = 4 pages.
+
+h4. Rescheduling
+
+Want to perform next scrape to give a couple pages or a mostly-full page. Need to track a rate (num_items / timespan), clamped to a min_reschedule / max_reschedule bounds.
 
 <notextile></div><div class="toggle"></notextile>
 
@@ -19,11 +136,15 @@ h2. More info
 
 There are many useful examples in the examples/ directory.
 
-h3. Authors
+h3. Credits
 
 Philip (flip) Kromer (flip@infochimps.org)
 
-Patches submitted by:
+<notextile><div class="toggle"></notextile>
+
+h2. Help!
+
+Send Monkeyshines questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
 
 <notextile></div></notextile>
 
