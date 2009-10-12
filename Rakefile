@@ -13,7 +13,7 @@ begin
     gem.summary     = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML.}
     gem.description = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML. Plays nicely with wuclan and wukong.}
     gem.executables = FileList['bin/*'].pathmap('%f')
-    gem.files       =  FileList["\w*", "{bin,docpages,examples,lib,spec,utils}/**/*"].reject{|file| file.to_s =~ %r{.*private.*} }
+    gem.files       =  FileList["\w*", "**/*.textile", "{bin,docpages,examples,lib,spec,utils}/**/*"].reject{|file| file.to_s =~ %r{.*private.*} }
     gem.add_dependency 'addressable'
     gem.add_dependency 'uuid'
     gem.add_dependency 'wukong'
