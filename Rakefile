@@ -11,8 +11,9 @@ begin
     gem.email        = "flip@infochimps.org"
     gem.homepage     = "http://github.com/mrflip/monkeyshines"
     gem.authors      = ["Philip (flip) Kromer"]
-
-
+    gem.add_dependency 'addressable'
+    gem.add_dependency 'uuid'
+    gem.add_dependency 'wukong'
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
