@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{monkeyshines}
-  s.version = "0.0.2"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Philip (flip) Kromer"]
@@ -18,15 +18,7 @@ Gem::Specification.new do |s|
      "README.textile"
   ]
   s.files = [
-    ".document",
-     ".gitignore",
-     "LICENSE",
-     "LICENSE.textile",
-     "README.textile",
-     "Rakefile",
-     "VERSION",
-     "examples/.gitignore",
-     "examples/bulk_urls/scrape_bulk_urls.rb",
+    "examples/bulk_urls/scrape_bulk_urls.rb",
      "examples/rename_tree/rename_hdp_tree.rb",
      "examples/rename_tree/rename_ripd_tree.rb",
      "examples/rss_feeds/scrape_rss_feeds.rb",
@@ -98,8 +90,6 @@ Gem::Specification.new do |s|
      "lib/monkeyshines/utils/union_interval.rb",
      "lib/monkeyshines/utils/uri.rb",
      "lib/monkeyshines/utils/uuid.rb",
-     "monkeyshines.gemspec",
-     "scrape_from_file.rb",
      "spec/monkeyshines_spec.rb",
      "spec/spec_helper.rb"
   ]

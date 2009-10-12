@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'rubygems'
 require 'rake'
 
@@ -5,12 +6,14 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
-    gem.name         = "monkeyshines"
-    gem.summary      = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML.}
-    gem.description  = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML. Plays nicely with wuclan and wukong.}
-    gem.email        = "flip@infochimps.org"
-    gem.homepage     = "http://github.com/mrflip/monkeyshines"
-    gem.authors      = ["Philip (flip) Kromer"]
+    gem.name        = "monkeyshines"
+    gem.authors     = ["Philip (flip) Kromer"]
+    gem.email       = "flip@infochimps.org"
+    gem.homepage    = "http://github.com/mrflip/monkeyshines"
+    gem.summary     = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML.}
+    gem.description = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML. Plays nicely with wuclan and wukong.}
+    gem.executables = FileList['bin/*'].pathmap('%f')
+    gem.files       =  FileList["\w*", "{bin,docpages,examples,lib,spec,utils}/**/*"].reject{|file| file.to_s =~ %r{.*private.*} }
     gem.add_dependency 'addressable'
     gem.add_dependency 'uuid'
     gem.add_dependency 'wukong'
@@ -25,7 +28,6 @@ Spec::Rake::SpecTask.new(:spec) do |spec|
   spec.libs << 'lib' << 'spec'
   spec.spec_files = FileList['spec/**/*_spec.rb']
 end
-
 Spec::Rake::SpecTask.new(:rcov) do |spec|
   spec.libs << 'lib' << 'spec'
   spec.pattern = 'spec/**/*_spec.rb'
@@ -39,7 +41,7 @@ begin
   Reek::RakeTask.new do |t|
     t.fail_on_error = true
     t.verbose = false
-    t.source_files = ['lib/**/*.rb', 'examples/**/*.rb']
+    t.source_files = ['lib/**/*.rb', 'examples/**/*.rb', 'utils/**/*.rb']
   end
 rescue LoadError
   task :reek do
@@ -77,29 +79,21 @@ Rake::RDocTask.new do |rdoc|
   else
     version = ""
   end
-
   rdoc.options += [
     '-SHN',
     '-f', 'darkfish',  # use darkfish rdoc styler
   ]
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "edamame #{version}"
+  rdoc.title = "monkeyshines #{version}"
   #
   File.open(File.dirname(__FILE__)+'/.document').each{|line| rdoc.rdoc_files.include(line.chomp) }
 end
 
-require 'rake/rdoctask'
-Rake::RDocTask.new do |rdoc|
-  if File.exist?('VERSION.yml')
-    config = YAML.load(File.read('VERSION.yml'))
-    version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
-  else
-    version = ""
+begin
+  require 'cucumber/rake/task'
+  Cucumber::Rake::Task.new(:features)
+rescue LoadError
+  task :features do
+    abort "Cucumber is not available. In order to run features, you must: sudo gem install cucumber"
   end
-
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "monkeyshines #{version}"
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
 end
-
