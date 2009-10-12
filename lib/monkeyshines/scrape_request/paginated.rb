@@ -258,8 +258,8 @@ module Monkeyshines
         #   self.key]
 
         Log.info(
-          %Q{resched\tit %4d\t%7.3f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%s } %
-          [sess_items, sess_timespan.size.to_f, target_items_per_job / sess_items_rate, self.delay, new_period, new_delay, self.key])
+          %Q{resched\tit %4d\t%7.3f\t%7.2f\t%7.2f\t%7.2f\t%7.2f\t%10d\t%s } %
+          [sess_items, sess_timespan.size.to_f, target_items_per_job / sess_items_rate, self.delay, new_period, new_delay, prev_max, self.key])
 
         self.delay           = new_delay.to_f.clamp(RATE_PARAMETERS[:min_resched_delay], RATE_PARAMETERS[:max_resched_delay])
         self.prev_items_rate = new_items_rate
