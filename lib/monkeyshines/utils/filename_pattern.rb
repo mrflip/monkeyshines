@@ -28,6 +28,10 @@ module Monkeyshines
         val
       end
 
+      def to_s token_vals={}
+        make token_vals
+      end
+
       #
       # walk through pattern, constructing a regexp for parsing a templated
       # product of that pattern
@@ -56,7 +60,7 @@ module Monkeyshines
         case token
         when :pid           then pid
         when :hostname      then hostname
-        when :handle        then token_vals[:handle]
+        when :handle        then token_vals[:handle] || Monkeyshines::CONFIG[:handle]
         when :handle_prefix then token_vals[:handle].to_s[0..5]
         when :timestamp     then token_vals[:timestamp]
         when :date          then token_vals[:timestamp][ 0..7]
