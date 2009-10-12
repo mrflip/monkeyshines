@@ -4,31 +4,25 @@ It's designed to handle large-scale scrapes that may exceed the capabilities of 
 
 h2. Install
 
-This is best run standalone -- not as a gem; it's still in heavy development. I recommend cloning
+** "Main Install and Setup Documentation":http://mrflip.github.com/monkeyshines/INSTALL.html **
 
-* http://github.com/mrflip/edamame
-* http://github.com/mrflip/wuclan
-* http://github.com/mrflip/wukong
-* http://github.com/mrflip/monkeyshines (this repo)
+h3. Get the code
 
-into a common directory.
+We're still actively developing monkeyshines.  The newest version is available via "Git":http://git-scm.com on "github:":http://github.com/mrflip/monkeyshines
 
-Additionally, you'll need some of these gems:
+pre. $ git clone git://github.com/mrflip/monkeyshines
 
-* addressable (2.1.0)
-* extlib (0.9.12)
-* htmlentities (4.2.0)
+A gem is available from "gemcutter:":http://gemcutter.org/gems/monkeyshines
 
-And if you spell ruby with a 'j', you'll want
+pre. $ sudo gem install monkeyshines --source=http://gemcutter.org
 
-* jruby-openssl (0.5.2)
-* json-jruby (1.1.7)
+(don't use the gems.github.com version -- it's way out of date.)
 
----------------------------------------------------------------------------
+You can instead download this project in either "zip":http://github.com/mrflip/monkeyshines/zipball/master or "tar":http://github.com/mrflip/monkeyshines/tarball/master formats.
 
-h2. Help!
+h3. Dependencies and setup
 
-Send Monkeyshines questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
+To finish setting up, see the "detailed setup instructions":http://mrflip.github.com/monkeyshines/INSTALL.html and then read the "usage notes":http://mrflip.github.com/monkeyshines/usage.html
 
 ---------------------------------------------------------------------------
 
@@ -109,3 +103,21 @@ h4. Rescheduling
 
 Want to perform next scrape to give a couple pages or a mostly-full page. Need to track a rate (num_items / timespan), clamped to a min_reschedule / max_reschedule bounds.
 
+
+---------------------------------------------------------------------------
+
+<notextile><div class="toggle"></notextile>
+
+h2. More info
+
+There are many useful examples in the examples/ directory.
+
+h3. Credits
+
+Monkeyshines was written by "Philip (flip) Kromer":http://mrflip.com (flip@infochimps.org / "@mrflip":http://twitter.com/mrflip) for the "infochimps project":http://infochimps.org
+
+h3. Help!
+
+Send monkeyshines questions to the "Infinite Monkeywrench mailing list":http://groups.google.com/group/infochimps-code
+
+<notextile></div></notextile>
