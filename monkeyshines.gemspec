@@ -13,8 +13,7 @@ Gem::Specification.new do |s|
   s.description = %q{A simple scraper for directed scrapes of APIs, feed or structured HTML. Plays nicely with wuclan and wukong.}
   s.email = %q{flip@infochimps.org}
   s.extra_rdoc_files = [
-    "LICENSE",
-     "LICENSE.textile",
+    "LICENSE.textile",
      "README.textile"
   ]
   s.files = [
