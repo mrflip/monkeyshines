@@ -1,0 +1,6 @@
+
+h2. Where the hell?
+
+Most of these examples live in the "wuclan":http://mrflip.github.com/wuclan/ repository -- the directories are symlinks into that repo.
+
+Either install them from git source in adjoining directories, or just head into the wuclan examples/ directory and run stuff from there.
