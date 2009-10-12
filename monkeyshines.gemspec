@@ -19,6 +19,9 @@ Gem::Specification.new do |s|
   s.files = [
     "LICENSE.textile",
      "README.textile",
+     "examples/README.textile",
+     "examples/README.textile",
+     "examples/README.textile",
      "examples/bulk_urls/scrape_bulk_urls.rb",
      "examples/rename_tree/rename_hdp_tree.rb",
      "examples/rename_tree/rename_ripd_tree.rb",
