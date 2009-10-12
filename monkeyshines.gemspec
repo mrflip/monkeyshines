@@ -17,10 +17,13 @@ Gem::Specification.new do |s|
      "README.textile"
   ]
   s.files = [
-    "examples/bulk_urls/scrape_bulk_urls.rb",
+    "LICENSE.textile",
+     "README.textile",
+     "examples/bulk_urls/scrape_bulk_urls.rb",
      "examples/rename_tree/rename_hdp_tree.rb",
      "examples/rename_tree/rename_ripd_tree.rb",
      "examples/rss_feeds/scrape_rss_feeds.rb",
+     "examples/shorturls/README.textile",
      "examples/shorturls/README.textile",
      "examples/shorturls/bulkdump_shorturls.rb",
      "examples/shorturls/bulkload_shorturls.rb",
