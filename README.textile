@@ -26,6 +26,99 @@ To finish setting up, see the "detailed setup instructions":http://mrflip.github
 
 ---------------------------------------------------------------------------
 
+h2. Overview
+
+h3. Runner
+
+* Builder Pattern to construct
+* does the running itself
+* 
+
+# Set stuff up
+# Loop. (Until no more requests) 
+## Get a request from #source
+## Pass that request to the fetcher
+##* The fetcher has a #get method,
+##* which stuffs the response contents into the request object
+## if the fetcher has a successful response,
+## 
+
+**Bulk URL Scraper**
+
+# Open a file with URLs, one per line
+# Loop until no more requests:
+## Get a simple_request from #source
+##* The source is a FlatFileStore;
+##* It generates simple_request (objects of type SimpleRequest): has a #url and
+    an attribute holding (contents, response_code, response_message).
+
+## Pass that request to an http_fetcher
+##* The fetcher has a #get method,
+##* which stuffs the body of the response -- basically, the HTML for the page -- request object's contents. (and so on for the response_code and response_message).
+
+## if the fetcher has a successful response,
+##* Pass it to a flat_file_store
+##* which just wrtes the request to disk, one line per request, tab separated on fields.
+url moreinfo scraped_at response_code response_message contents
+
+beanstalk == queue
+ttserver == distributed lightweight DB
+god == monitoring & restart
+shotgun == runs sinatra for development
+thin == runs sinatra for production
+
+ ~/ics/monkeyshines/examples/twitter_search == twitter search scraper
+   * work directory holds everything generated: logs, output, dumps of the scrape queue
+   * ./dump_twitter_search_jobs.rb --handle=com.twitter.search --dest-filename=dump.tsv
+     serializes the queue to a flat file in work/seed
+   load_twitter_search_jobs.rb*
+   scrape_twitter_search.rb
+   * nohup ./scrape_twitter_search.rb --handle=com.twitter.search >> work/log/twitter_search-console-`date "+%Y%m%d%M%H%S`.log 2>&1 &
+
+
+   * tail -f work/log/twitter_search-console-20091006.log  (<-- replace date with latest run)
+
+   # the acutal file being stored
+   * tail -f work/20091013/comtwittersearch+20091013164824-17240.tsv | cutc 150 
+   
+   
+h3. Request Source
+
+
+* runner.source
+** request stream
+** Supplies raw material to initialize a job
+
+
+
+
+
+
+
+
+
+
+
+
+Twitter search scra
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 h2. Request Queue
 
 h3. Periodic requests
