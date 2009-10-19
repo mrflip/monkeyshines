@@ -12,7 +12,7 @@ begin
     gem.homepage    = "http://github.com/mrflip/monkeyshines"
     gem.summary     = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML.}
     gem.description = %Q{A simple scraper for directed scrapes of APIs, feed or structured HTML. Plays nicely with wuclan and wukong.}
-    gem.executables = FileList['bin/*'].pathmap('%f')
+    gem.executables = FileList['bin/*.rb'].pathmap('%f')
     gem.files       =  FileList["\w*", "**/*.textile", "examples/*", "{app,bin,docpages,examples,lib,spec,utils}/**/*"].reject{|file| file.to_s =~ %r{.*private.*} }
     gem.add_dependency 'addressable'
     gem.add_dependency 'uuid'
