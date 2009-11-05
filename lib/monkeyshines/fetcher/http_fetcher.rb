@@ -88,7 +88,7 @@ module Monkeyshines
         when Net::HTTPUnauthorized        then sleep_time =  0 # 401 (protected user, probably)
         when Net::HTTPForbidden           then sleep_time =  4 # 403 update limit
         when Net::HTTPNotFound            then sleep_time =  0 # 404 deleted
-        when Net::HTTPServiceUnavailable  then sleep_time =  9 # 503 Fail Whale
+        when Net::HTTPServiceUnavailable  then sleep_time = 15 # 503 Fail Whale
         when Net::HTTPServerError         then sleep_time =  2 # 5xx All other server errors
         else                              sleep_time = 1
         end
