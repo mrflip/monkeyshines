@@ -88,11 +88,12 @@ module Monkeyshines
         when Net::HTTPUnauthorized        then sleep_time =  0 # 401 (protected user, probably)
         when Net::HTTPForbidden           then sleep_time =  4 # 403 update limit
         when Net::HTTPNotFound            then sleep_time =  0 # 404 deleted
-        when Net::HTTPServiceUnavailable  then sleep_time = 15 # 503 Fail Whale
+        when Net::HTTPServiceUnavailable  then sleep_time =  5 # 503 Fail Whale
         when Net::HTTPServerError         then sleep_time =  2 # 5xx All other server errors
         else                              sleep_time = 1
         end
-        Log.warn "Received #{response.code}, sleeping #{sleep_time} ('#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at})"
+        sleep_time += response['retry-after'].to_i rescue 0
+        Log.warn "Received #{response.code} and retry-after #{response['retry-after']}, sleeping #{sleep_time} ('#{response.message[0..200].gsub(%r{[\r\n\t]}, " ")}' from #{@host}+#{@connection_opened_at}): '#{response.body[0..200].gsub(%r{[\r\n\t]}, " ")}'"
         sleep sleep_time
       end
 
