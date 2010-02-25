@@ -40,8 +40,8 @@ opts = Trollop::options do
   # output storage
   opt :cache_loc,      "URI for cache server",                         :type => String
   opt :chunk_time,     "Frequency to rotate chunk files (in seconds)", :type => Integer, :default => 60*60*4
-  opt :dest_dir,       "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
-  opt :dest_pattern,   "Pattern for dump file output",                 :default => ":dest_dir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid.tsv"
+  opt :rootdir,       "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
+  opt :dest_pattern,   "Pattern for dump file output",                 :default => ":rootdir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid.tsv"
 end
 handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
 
@@ -53,7 +53,8 @@ periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 10000, :time 
 # ******************** Load from store or random walk ********************
 #
 if opts[:from]
-  src_store = Monkeyshines::Store::FlatFileStore.new_from_command_line(opts, :filemode => 'r')
+  opts[:filename] = opts[:from]
+  src_store = Monkeyshines::Store::FlatFileStore.new opts # + {:filemode => 'r'}
   src_store.skip!(opts[:skip].to_i) if opts[:skip]
 elsif opts[:random]
   src_store = Monkeyshines::Store::RandomUrlStream.new_from_command_line(opts)
@@ -68,23 +69,25 @@ end
 #
 RDB_PORTS  = { 'tinyurl' => "localhost:10042", 'bitly' => "localhost:10043", 'other' => "localhost:10044" }
 cache_loc  = opts[:cache_loc] || RDB_PORTS[handle] or raise "Need a handle (bitly, tinyurl or other)."
-dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(cache_loc)
+dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(:uri => cache_loc)
+
+
 # dest_cache = Monkeyshines::Store::MultiplexShorturlCache.new(RDB_PORTS)
 
 #
 # Store the data into flat files
 #
 dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern],
-  :handle => 'shorturl-'+handle, :dest_dir => opts[:dest_dir])
-dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(dest_pattern,
-  opts[:chunk_time].to_i, opts)
+  :handle => 'shorturl-'+handle, :rootdir => opts[:rootdir])
+dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(:pattern => opts[:dest_pattern],
+  :chunk_time => opts[:chunk_time].to_i, :rootdir => opts[:rootdir])
 
 #
 # Conditional store uses the key-value DB to boss around the flat files --
 # requests are only made (and thus data is only output) if the url is missing
 # from the key-value store.
 #
-dest_store = Monkeyshines::Store::ConditionalStore.new(dest_cache, dest_files)
+dest_store = Monkeyshines::Store::ConditionalStore.new(:cache => dest_cache, :store => dest_files)
 
 #
 # ******************** Fetcher ********************
