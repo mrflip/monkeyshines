@@ -12,13 +12,14 @@ module Monkeyshines
       def initialize options
         raise "URI for #{self.class} is required" if options[:uri].blank?
         self.db_host, self.db_port = options[:uri].to_s.split(':')
+        self.db_host.gsub!(/^(localhost|127\.0\.0\.1)$/,'')
         super options
       end
 
       def db
         return @db if @db
         @db ||= TokyoTyrant::RDB.new
-        @db.open(db_host, db_port) or raise("Can't open DB #{db_host}:#{db_port}. Pass in host:port' #{@db.ecode}: #{@db.errmsg(@db.ecode)}")
+        @db.open(db_host, db_port) or raise("Can't open DB at host #{db_host} port #{db_port}. Pass in host:port' #{@db.ecode}: #{@db.errmsg(@db.ecode)}")
         @db
       end
 
