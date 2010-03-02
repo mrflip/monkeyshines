@@ -40,7 +40,7 @@ opts = Trollop::options do
   # output storage
   opt :cache_loc,      "URI for cache server",                         :type => String
   opt :chunk_time,     "Frequency to rotate chunk files (in seconds)", :type => Integer, :default => 60*60*4
-  opt :rootdir,       "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
+  opt :rootdir,        "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
   opt :dest_pattern,   "Pattern for dump file output",                 :default => ":rootdir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid.tsv"
 end
 handle = opts[:base_url].gsub(/\.com$/,'').gsub(/\W+/,'')
@@ -80,7 +80,7 @@ dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(:uri => cache_loc)
 dest_pattern = Monkeyshines::Utils::FilenamePattern.new(opts[:dest_pattern],
   :handle => 'shorturl-'+handle, :rootdir => opts[:rootdir])
 dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(:pattern => opts[:dest_pattern],
-  :chunk_time => opts[:chunk_time].to_i, :rootdir => opts[:rootdir])
+  :chunk_time => opts[:chunk_time].to_i, :handle => 'shorturl-'+handle, :rootdir => opts[:rootdir])
 
 #
 # Conditional store uses the key-value DB to boss around the flat files --
