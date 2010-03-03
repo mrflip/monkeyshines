@@ -44,9 +44,10 @@ Settings.define :random_radix, :description => "36 for most, 62 if URLs are case
 # output storage
 Settings.define :cache_loc,      :description => "URI for cache server",                         :type => String
 Settings.define :chunk_time,     :description => "Frequency to rotate chunk files (in seconds)", :type => Integer, :default => 60*60*4
-Settings.define :rootdir,        :description => "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd'
-Settings.define :dest_pattern,   :description => "Pattern for dump file output",                 :default => ":rootdir/:handle_prefix/:handle/:date/:handle+:timestamp-:pid.tsv"
+Settings.define :rootdir,        :description => "Filename base for output, def /data/ripd",     :type => String,  :default => '/data/ripd/shorturls'
+Settings.define :dest_pattern,   :description => "Pattern for dump file output",                 :default => ":rootdir/:date/:handle+:timestamp-:pid.tsv"
 Settings.resolve!
+Log = Logger.new($stderr) unless defined?(Log)
 
 # opts = Trollop::options do
 #   opt :base_url,       "Host part of URL: eg tinyurl.com",             :type => String, :required => true
@@ -105,7 +106,7 @@ dest_cache = Monkeyshines::Store::TyrantRdbKeyStore.new(:uri => cache_loc)
 dest_pattern = Monkeyshines::Utils::FilenamePattern.new(Settings.dest_pattern,
   :handle => 'shorturl-'+handle, :rootdir => Settings.rootdir)
 dest_files   = Monkeyshines::Store::ChunkedFlatFileStore.new(:pattern => Settings.dest_pattern,
-  :chunk_time => Settings.chunk_time.to_i, :rootdir => Settings.rootdir)
+  :chunk_time => Settings.chunk_time.to_i, :handle => 'shorturl-'+handle, :rootdir => Settings.rootdir)
 
 #
 # Conditional store uses the key-value DB to boss around the flat files --
@@ -135,6 +136,9 @@ src_store.each do |bareurl, *args|
     [response.scraped_at, response]                         # timestamp into cache, result into flat file
   end
   periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
+  graphite_sender.periodically do |metrics, iter, since|
+    metrics << ["scraper.shorturl.#{handle}.iter", iter]
+  end
 end
 dest_store.close
 fetcher.close
