@@ -6,11 +6,11 @@ class ShorturlStats < Struct.new(
     )
     
   def code_sort code
-    case code.to_i
-    when 404
+    case code.to_s
+    when /4\d{2}/
       self.failure_tot += 1
       self.fail_last += 1
-    when 301
+    when /3\d{2}/
       self.success_tot += 1
       self.success_last += 1
     else 
