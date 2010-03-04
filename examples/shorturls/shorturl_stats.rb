@@ -14,7 +14,7 @@ class ShorturlStats < Struct.new(
       self.success_tot += 1
       self.success_last += 1
     else 
-      Log.warn 'Code #{code} not included in stats.'
+      Log.warn "Code #{code} not included in stats."
     end
   end
   
