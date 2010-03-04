@@ -24,7 +24,8 @@ module Monkeyshines
       #
       def periodically &block
         super do
-          result = [ "%10d"%iter, "%7.1f"%since, "%7.1f"%rate, (block ? block.call : nil) ].flatten.compact
+          now = Time.now.utc.to_f
+          result = [ "%10d"%iter, "%7.1f"%since, "%7.1f"%inst_rate(now), (block ? block.call : nil) ].flatten.compact
           Log.info result.join("\t")
         end
       end

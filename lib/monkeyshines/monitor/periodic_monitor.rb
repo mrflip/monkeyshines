@@ -18,12 +18,13 @@ module Monkeyshines
     #
     class PeriodicMonitor
       attr_accessor :time_interval, :iter_interval
-      attr_accessor :last_time, :iter, :started_at
+      attr_accessor :last_time, :current_iter, :iter, :started_at
 
       def initialize options={}
         self.started_at    = Time.now.utc.to_f
         self.last_time     = started_at
         self.iter          = 0
+        self.current_iter  = 0
         self.time_interval = options[:time]
         self.iter_interval = options[:iters]
       end
@@ -42,9 +43,13 @@ module Monkeyshines
       def since
         Time.now.utc.to_f - started_at
       end
-      # Iterations per second
+      # Overall iterations per second
       def rate
         iter.to_f / since.to_f
+      end
+      # "Instantaneous" iterations per second
+      def inst_rate now
+        current_iter.to_f / (now-last_time).to_f
       end
 
       #
@@ -53,10 +58,12 @@ module Monkeyshines
       #
       def periodically &block
         self.iter += 1
+        self.current_iter += 1
         now       = Time.now.utc.to_f
         if enough_iterations? || enough_time?(now)
           block.call(iter, (now-last_time))
           self.last_time = now
+          self.current_iter = 0
         end
       end
     end
