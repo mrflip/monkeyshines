@@ -7,6 +7,7 @@ require 'configliere'
 #
 require 'shorturl_request'
 require 'shorturl_sequence'
+require 'shorturl_stats'
 require 'monkeyshines/utils/uri'
 require 'monkeyshines/utils/filename_pattern'
 require 'monkeyshines/store/conditional_store'
@@ -49,6 +50,7 @@ Settings.define :dest_pattern,   :description => "Pattern for dump file output",
 Settings.resolve!
 Log = Logger.new($stderr) unless defined?(Log)
 
+# Removed trollop optioning, added in configliere instead
 # opts = Trollop::options do
 #   opt :base_url,       "Host part of URL: eg tinyurl.com",             :type => String, :required => true
 #   opt :log,            "Log file name; leave blank to use STDERR",     :type => String
@@ -68,12 +70,16 @@ Log = Logger.new($stderr) unless defined?(Log)
 # end
 handle = Settings.base_url.gsub(/\.com$/,'').gsub(/\W+/,'')
 
+#
 # ******************** Log ********************
+#
 Settings.log = (WORK_DIR+"/log/shorturls_#{handle}-#{Time.now.to_flat}.log") if (Settings.log=='')
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 10000, :time => 30)
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 10000, :time => 60)
 
+#
 # ******************** Graphite Sender ***********************
-graphite_sender = Graphiterb::GraphiteLogger.new(:iters => 1000, :time => 30)
+#
+graphite_sender = Graphiterb::GraphiteLogger.new(:iters => 10000, :time => 60)
 
 #
 # ******************** Load from store or random walk ********************
@@ -121,6 +127,11 @@ dest_store = Monkeyshines::Store::ConditionalStore.new(:cache => dest_cache, :st
 fetcher = Monkeyshines::Fetcher::HttpHeadFetcher.new
 
 #
+# ******************** Success/Fail stats ********************
+#
+stats = ShorturlStats.new(0,0,0,0)
+
+#
 # ******************** Do this thing ********************
 #
 Log.info "Beginning scrape itself"
@@ -133,11 +144,16 @@ src_store.each do |bareurl, *args|
   result = dest_store.set( req.url ) do
     response = fetcher.get(req)                             # do the url fetch
     next unless response.response_code || response.contents # don't store bad fetches
+    stats.code_sort(response.response_code)                 # count successes (301) and failures (404)
     [response.scraped_at, response]                         # timestamp into cache, result into flat file
   end
-  periodic_log.periodically{ ["%7d"%dest_store.misses, 'misses', dest_store.size, req.response_code, result, req.url] }
+  periodic_log.periodically{ ["%7d"%stats.success_tot, 'successes', "%7d"%stats.failure_tot, 'failures', dest_store.size, req.response_code, result, req.url] }
   graphite_sender.periodically do |metrics, iter, since|
-    metrics << ["scraper.shorturl.#{handle}.iter", iter]
+    rates = stats.rates_inst
+    metrics << ["scraper.shorturl.#{handle}.success_rate", rates[0]]
+    metrics << ["scraper.shorturl.#{handle}.failure_rate", rates[1]]
+    metrics << ["scraper.shorturl.#{handle}.success_tot_rate", stats.rates_tot[0]]
+    metrics << ["scraper.shorturl.#{handle}.failure_tot_rate", stats.rates_tot[1]]
   end
 end
 dest_store.close
