@@ -67,6 +67,11 @@ module Monkeyshines
         file << obj.to_flat.join("\t")+"\n"
         obj
       end
+      
+      # returns the size of the current file
+      def size
+        File.size(filename)
+      end
 
       def set key, *args, &block
         tok, obj = block.call

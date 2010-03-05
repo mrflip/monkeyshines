@@ -32,8 +32,10 @@ require 'graphiterb' # needs graphiterb - simple ruby interface for graphite
 
 Configliere.use :commandline, :config_file, :define
 Settings.read 'shorturls.yaml' #~/.configliere/shorturls.yaml
-Settings.define :base_url,     :description =>"Host part of URL: eg tinyurl.com", :type => String, :required => true
-Settings.define :log,          :description => "Log file name; leave blank to use STDERR", :type => String
+Settings.define :base_url,     :description => "Host part of URL: eg tinyurl.com", :type => String, :required => true
+# Settings.define :log,          :description => "Log file name; leave blank to use STDERR", :type => String
+Settings.define :log_time,     :description => "Log time interval, in seconds, for periodic logger and Graphite logger", :type => Integer, :default => 10000
+Settings.define :log_iters,    :description => "Log iteration interval for periodic logger and Graphite logger", :type => Integer, :default => 60
 # input from file
 Settings.define :file_from,    :description => "Location of URLs to scrape", :type => String
 Settings.define :file_skip,    :description => "Initial lines to skip", :type => Integer
@@ -73,13 +75,14 @@ handle = Settings.base_url.gsub(/\.com$/,'').gsub(/\W+/,'')
 #
 # ******************** Log ********************
 #
-Settings.log = (WORK_DIR+"/log/shorturls_#{handle}-#{Time.now.to_flat}.log") if (Settings.log=='')
-periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => 10000, :time => 60)
+# (I don't think the log file name ever gets used)
+# Settings.log = (WORK_DIR+"/log/shorturls_#{handle}-#{Time.now.to_flat}.log") if (Settings.log=='')
+periodic_log = Monkeyshines::Monitor::PeriodicLogger.new(:iters => Settings.log_iters, :time => Settings.log_time)
 
 #
 # ******************** Graphite Sender ***********************
 #
-graphite_sender = Graphiterb::GraphiteLogger.new(:iters => 10000, :time => 60)
+graphite_sender = Graphiterb::GraphiteLogger.new(:iters => Settings.log_iters, :time => Settings.log_time)
 
 #
 # ******************** Load from store or random walk ********************
@@ -154,6 +157,7 @@ src_store.each do |bareurl, *args|
     metrics << ["scraper.shorturl.#{handle}.failure_rate", rates[1]]
     metrics << ["scraper.shorturl.#{handle}.success_tot_rate", stats.rates_tot[0]]
     metrics << ["scraper.shorturl.#{handle}.failure_tot_rate", stats.rates_tot[1]]
+    metrics << ["scraper.shorturl.#{handle}.current_file_size", dest_files.size]
   end
 end
 dest_store.close
