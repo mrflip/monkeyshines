@@ -34,8 +34,8 @@ Configliere.use :commandline, :config_file, :define
 Settings.read 'shorturls.yaml' #~/.configliere/shorturls.yaml
 Settings.define :base_url,     :description => "Host part of URL: eg tinyurl.com", :type => String, :required => true
 # Settings.define :log,          :description => "Log file name; leave blank to use STDERR", :type => String
-Settings.define :log_time,     :description => "Log time interval, in seconds, for periodic logger and Graphite logger", :type => Integer, :default => 10000
-Settings.define :log_iters,    :description => "Log iteration interval for periodic logger and Graphite logger", :type => Integer, :default => 60
+Settings.define :log_time,     :description => "Log time interval, in seconds, for periodic logger and Graphite logger", :type => Integer, :default => 60
+Settings.define :log_iters,    :description => "Log iteration interval for periodic logger and Graphite logger", :type => Integer, :default => 10000
 # input from file
 Settings.define :file_from,    :description => "Location of URLs to scrape", :type => String
 Settings.define :file_skip,    :description => "Initial lines to skip", :type => Integer
