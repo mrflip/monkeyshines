@@ -70,6 +70,7 @@ module Monkeyshines
       
       # returns the size of the current file
       def size
+        return 0 if !@file
         File.size(filename)
       end
 
