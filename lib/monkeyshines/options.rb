@@ -1,3 +1,5 @@
+require 'yaml'
+require 'monkeyshines/runner_core/options'
 require 'monkeyshines/utils/trollop'
 module Monkeyshines
 

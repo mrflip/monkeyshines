@@ -142,6 +142,7 @@ module Monkeyshines
     def setup_main_log
       unless options[:log][:dest].blank?
         log_file = "%s/log/%s" % [WORK_DIR, options[:log][:dest]]
+        require 'fileutils'
         FileUtils.mkdir_p(File.dirname(log_file))
         $stdout = $stderr = File.open( log_file+"-console.log", "a" )
       end
